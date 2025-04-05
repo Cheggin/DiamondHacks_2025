@@ -60,12 +60,42 @@ def inference(image_bytes):
         ],
     )
 
-    for chunk in client.models.generate_content_stream(
+    response = client.models.generate_content(
         model=model,
         contents=contents,
         config=generate_content_config,
-    ):
-        print(chunk.text, end="")
+    )
+
+    features = response.text.split(",")
+    imprint = features[0]
+    color = features[1]
+    shape = features[2]
+
+    url = f"https://www.drugs.com/imprints.php?imprint={imprint}&color={color}&shape={shape}"
+
+    response = requests.get(url)
+    if response.status_code == 200:
+        html_content = response.text
+        soup = BeautifulSoup(html_content, "html.parser")
+        
+        pills = soup.find_all("a", string="View details")
+        
+        results = []
+        for pill_link in pills:
+            container = pill_link.find_parent("div")
+            if container:
+                text = container.get_text(" ", strip=True)
+                results.append(text)
+        
+        if results:
+            print("Found pill information:")
+            for r in results:
+                print("-" * 40)
+                print(r)
+        else:
+            print("No pill details found using the current parsing strategy.")
+    else:
+        print(f"Error fetching page: Status code {response.status_code}")
 
 
 # Load image and run inference
