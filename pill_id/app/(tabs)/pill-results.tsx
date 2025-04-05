@@ -5,8 +5,9 @@ import * as FileSystem from 'expo-file-system';
 
 export default function PillResultScreen() {
   const { photo1, photo2 } = useLocalSearchParams();
-  const [result1, setResult1] = useState('');
-  const [result2, setResult2] = useState('');
+  // const [result1, setResult1] = useState('');
+  // const [result2, setResult2] = useState('');
+  const [result, setResult] = useState('');
 
   useEffect(() => {
     if (photo1 && photo2) {
@@ -30,31 +31,41 @@ export default function PillResultScreen() {
       });
 
       const data = await response.json();
-      setResult1(data.response1);
-      setResult2(data.response2);
+      // setResult1(data.response1);
+      // setResult2(data.response2);
+      setResult(data.response);
     } catch (err) {
       console.error('Error sending to Gemini:', err);
-      setResult1('Error analyzing image 1.');
-      setResult2('Error analyzing image 2.');
+      // setResult1('Error analyzing image 1.');
+      // setResult2('Error analyzing image 2.');
+      setResult('Error analyzing combined image.');
     }
   };
+
+
+  // {photo1 && (
+  //   <>
+  //     <Image source={{ uri: photo1 as string }} style={styles.image} />
+  //     <Text>{result1 || 'Analyzing photo 1...'}</Text>
+  //   </>
+  // )}
+
+  // {photo2 && (
+  //   <>
+  //     <Image source={{ uri: photo2 as string }} style={styles.image} />
+  //     <Text>{result2 || 'Analyzing photo 2...'}</Text>
+  //   </>
+  // )}
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Gemini Pill Results</Text>
 
-      {photo1 && (
-        <>
-          <Image source={{ uri: photo1 as string }} style={styles.image} />
-          <Text>{result1 || 'Analyzing photo 1...'}</Text>
-        </>
+      {result && (
+        <Text style={{ marginTop: 16 }}>{result}</Text>
       )}
-
-      {photo2 && (
-        <>
-          <Image source={{ uri: photo2 as string }} style={styles.image} />
-          <Text>{result2 || 'Analyzing photo 2...'}</Text>
-        </>
+      {(!result) && (
+        <Text style={{ marginTop: 16 }}>Analyzing photos...</Text>
       )}
     </ScrollView>
   );

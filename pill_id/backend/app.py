@@ -1,22 +1,19 @@
 from flask import Flask, request, jsonify
-import google.generativeai as genai
 import base64
 from flask_cors import CORS
+from PIL import Image
+from io import BytesIO
+from inference import inference
 
 app = Flask(__name__)
-CORS(app)  # Enables CORS for all routes
-
-# 🔑 Replace with your actual Gemini API key
-genai.configure(api_key='AIzaSyDjBMv556YIqxSCAk-tJOvk7-ERwIN9diI')
-
-model = genai.GenerativeModel('gemini-pro-vision')
+CORS(app)
 
 @app.route('/')
 def index():
     return 'Pill ID Gemini API is running!'
 
 @app.route('/analyze-both', methods=['POST'])
-def analyze_both():
+def analyze():
     try:
         data = request.get_json()
         image1_b64 = data.get('image1')
@@ -29,20 +26,21 @@ def analyze_both():
         image1_bytes = base64.b64decode(image1_b64)
         image2_bytes = base64.b64decode(image2_b64)
 
-        # Generate Gemini responses
-        result1 = model.generate_content([
-            "What is this pill? Identify it and explain its common use.",
-            {"mime_type": "image/jpeg", "data": image1_bytes}
-        ])
+        # use PIL to concatenate the images, with image 1 being on the top and image 2 being on the bottom
+        image1 = Image.open(BytesIO(image1_bytes))
+        image2 = Image.open(BytesIO(image2_bytes))
 
-        result2 = model.generate_content([
-            "What is this pill? Identify it and explain its common use.",
-            {"mime_type": "image/jpeg", "data": image2_bytes}
-        ])
+        # combine them
+        total_height = image1.height + image2.height
+        new_image = Image.new('RGB', (max(image1.width, image2.width), total_height))
+        new_image.paste(image1, (0, 0))
+        new_image.paste(image2, (0, image1.height))
+
+        combined_image_bytes = BytesIO()
+        result = inference(combined_image_bytes)
 
         return jsonify({
-            'response1': result1.text,
-            'response2': result2.text
+            'response1': result.text,
         })
 
     except Exception as e:
