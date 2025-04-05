@@ -1,62 +1,79 @@
-import { useEffect } from 'react';
-import { StyleSheet, Image, View } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { useEffect, useState } from 'react';
+import { View, Image, Text, ScrollView, StyleSheet } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
+import * as FileSystem from 'expo-file-system';
+
 export default function PillResultScreen() {
-  const navigation = useNavigation();
-  const route = useRoute();
-  const { photo1, photo2 } = route.params || {};
+  const { photo1, photo2 } = useLocalSearchParams();
+  const [result1, setResult1] = useState('');
+  const [result2, setResult2] = useState('');
 
   useEffect(() => {
-    if (!photo1 || !photo2) {
-      navigation.goBack();
+    if (photo1 && photo2) {
+      sendBothPhotos(photo1 as string, photo2 as string);
     }
   }, [photo1, photo2]);
 
+  const sendBothPhotos = async (photo1Uri: string, photo2Uri: string) => {
+    try {
+      const base64_1 = await FileSystem.readAsStringAsync(photo1Uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      const base64_2 = await FileSystem.readAsStringAsync(photo2Uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      const response = await fetch('http://<YOUR-IP>:5000/analyze-both', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image1: base64_1, image2: base64_2 }),
+      });
+
+      const data = await response.json();
+      setResult1(data.response1);
+      setResult2(data.response2);
+    } catch (err) {
+      console.error('Error sending to Gemini:', err);
+      setResult1('Error analyzing image 1.');
+      setResult2('Error analyzing image 2.');
+    }
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={<View />}>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Pill Identification</ThemedText>
-      </ThemedView>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Gemini Pill Results</Text>
 
       {photo1 && (
-        <ThemedView style={styles.imageContainer}>
-          <ThemedText type="subtitle">Pill Photo 1</ThemedText>
-          <Image source={{ uri: photo1 }} style={styles.image} />
-        </ThemedView>
+        <>
+          <Image source={{ uri: photo1 as string }} style={styles.image} />
+          <Text>{result1 || 'Analyzing photo 1...'}</Text>
+        </>
       )}
 
       {photo2 && (
-        <ThemedView style={styles.imageContainer}>
-          <ThemedText type="subtitle">Pill Photo 2</ThemedText>
-          <Image source={{ uri: photo2 }} style={styles.image} />
-        </ThemedView>
+        <>
+          <Image source={{ uri: photo2 as string }} style={styles.image} />
+          <Text>{result2 || 'Analyzing photo 2...'}</Text>
+        </>
       )}
-
-      <ThemedText>
-        These pill photos will be analyzed using Gemini. Identification results will appear here soon.
-      </ThemedText>
-    </ParallaxScrollView>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  container: {
+    padding: 16,
+    gap: 16,
+    alignItems: 'center',
   },
-  imageContainer: {
-    marginVertical: 12,
-    gap: 4,
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
   },
   image: {
-    width: '100%',
-    height: 200,
-    borderRadius: 8,
+    width: 300,
+    height: 300,
     resizeMode: 'contain',
+    borderRadius: 8,
   },
 });
