@@ -73,7 +73,7 @@ def inference(image_bytes):
         print(f"Error fetching page: Status code {response.status_code}")
 
     
-with open("pill_id/backend/pill.jpeg", "rb") as file:
+with open("backend/pill.jpeg", "rb") as file:
     local_image_bytes = file.read()
 
 inference(local_image_bytes)  # Replace None with actual image bytes when calling the function

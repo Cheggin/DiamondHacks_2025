@@ -24,11 +24,14 @@ export default function PillResultScreen() {
         encoding: FileSystem.EncodingType.Base64,
       });
 
-      const response = await fetch('http://<YOUR-IP>:5000/analyze-both', {
+      const response = await fetch('http://100.80.6.211:5001/analyze-both', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image1: base64_1, image2: base64_2 }),
       });
+    // const response = await fetch('http://100.80.6.211:5001/test', {
+    //     method: 'GET'
+    // })
 
       const data = await response.json();
       // setResult1(data.response1);

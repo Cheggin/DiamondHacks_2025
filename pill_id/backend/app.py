@@ -16,6 +16,7 @@ def index():
 def analyze():
     try:
         data = request.get_json()
+        # print(data)
         image1_b64 = data.get('image1')
         image2_b64 = data.get('image2')
 
@@ -37,15 +38,25 @@ def analyze():
         new_image.paste(image2, (0, image1.height))
 
         combined_image_bytes = BytesIO()
+        new_image.save(combined_image_bytes, format='PNG')
+        combined_image_bytes.seek(0)  # Reset the BytesIO object to the beginning
+        combined_image_bytes = combined_image_bytes.read()  # Read the bytes for inference
+
+        # Pass the actual image bytes to inference
         result = inference(combined_image_bytes)
 
         return jsonify({
-            'response1': result.text,
+            'response': result.text,
+            # 'response': 'testing '
         })
 
     except Exception as e:
         print(f'Error: {e}')
         return jsonify({'error': 'Internal server error'}), 500
 
+@app.route('/test', methods=['GET'])
+def test():
+    return jsonify({'message': 'Test endpoint is working!'})
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5001)
