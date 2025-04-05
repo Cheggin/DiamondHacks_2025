@@ -1,14 +1,10 @@
 from flask import Flask, request, jsonify
 import base64
-import google.generativeai as genai
 from flask_cors import CORS
+from inference import inference  # Import the inference function from the inference module
 
 app = Flask(__name__)
 CORS(app)  # Allow requests from Expo
-
-genai.configure(api_key='YOUR_GEMINI_API_KEY')
-
-model = genai.GenerativeModel('gemini-pro-vision')
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
@@ -20,9 +16,6 @@ def analyze():
 
     image_bytes = base64.b64decode(image_b64)
 
-    response = model.generate_content([
-        "Identify this pill and describe its function.",
-        {"mime_type": "image/jpeg", "data": image_bytes}
-    ])
+    response = inference(image_bytes)
 
     return jsonify({'response': response.text})
