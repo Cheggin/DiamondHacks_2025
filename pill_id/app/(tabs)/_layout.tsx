@@ -37,7 +37,7 @@ export default function TabLayout() {
         name="pill-upload"
         options={{
           title: 'Pill Upload',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="square.and.arrow.up.fill" color={color} />,
         }}
       />
     </Tabs>

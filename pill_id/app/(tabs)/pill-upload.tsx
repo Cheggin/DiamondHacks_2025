@@ -6,6 +6,7 @@ import { router } from 'expo-router';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { ThemedButton } from '@/components/ThemedButton';
 
 export const unstable_settings = {
   unmountOnBlur: true,
@@ -49,15 +50,15 @@ export default function PhotoUploadScreen() {
 
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
+      headerBackgroundColor={{ light: '#caf0f8', dark: '#1D3D47' }}
       headerImage={<View />}>
       <ThemedView style={styles.container}>
-        <ThemedText type="title">Upload Pill Photos</ThemedText>
+        <ThemedText style={styles.centered} type="title">Upload Pill Photos</ThemedText>
 
-        <Button title="Take front of pill photo" onPress={() => pickImage(setPhoto1, 'photo1')} />
+        <ThemedButton title="Take front of pill photo" onPress={() => pickImage(setPhoto1, 'photo1')} />
         {photo1 && <Image source={{ uri: photo1 }} style={styles.imagePreview} />}
 
-        <Button title="Take back of pill photo" onPress={() => pickImage(setPhoto2, 'photo2')} />
+        <ThemedButton title="Take back of pill photo" onPress={() => pickImage(setPhoto2, 'photo2')} />
         {photo2 && <Image source={{ uri: photo2 }} style={styles.imagePreview} />}
       </ThemedView>
     </ParallaxScrollView>
@@ -68,6 +69,11 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     gap: 16,
+  },
+  centered: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    textAlign: 'center',
   },
   imagePreview: {
     width: '100%',
