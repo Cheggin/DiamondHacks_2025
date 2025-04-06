@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState } from 'react';
-
 const AppStateContext = createContext<any>(null);
 
 export function AppStateProvider({ children }: { children: React.ReactNode }) {

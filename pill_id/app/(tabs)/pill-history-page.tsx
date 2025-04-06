@@ -10,12 +10,15 @@ import {
 import { Table, Row, Rows } from "react-native-table-component";
 import { PillHistory } from "./pill-history-class";
 import { useFocusEffect } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import GlobalHeader from "../../components/global-header";
 
 const history = new PillHistory();
 
 export default function PillHistoryTable() {
   const [tableData, setTableData] = useState<string[][]>([]);
   const [searchText, setSearchText] = useState("");
+  const insets = useSafeAreaInsets();
 
   const tableHead = ["Name", "Shape", "Color", "Dosage", "Time"];
 
@@ -51,31 +54,43 @@ export default function PillHistoryTable() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Pill History</Text>
+    <>
+      <GlobalHeader />
+      <ScrollView contentContainerStyle={[styles.container, { paddingTop: insets.top + 16 }]}>
+        <Text style={styles.title}>Pill History</Text>
 
-      <TextInput
-        style={styles.search}
-        placeholder="Search by name, shape, color, or dosage..."
-        value={searchText}
-        onChangeText={handleSearch}
-      />
+        <TextInput
+          style={styles.search}
+          placeholder="Search by name, shape, color, or dosage..."
+          value={searchText}
+          onChangeText={handleSearch}
+        />
 
-      <Table borderStyle={{ borderWidth: 1, borderColor: "#ccc" }}>
-        <Row data={tableHead} style={styles.head} textStyle={{ margin: 6, fontWeight: 'bold' }} />
-        <Rows data={tableData} textStyle={{ margin: 6 }} />
-      </Table>
+        <Table borderStyle={{ borderWidth: 1, borderColor: "#ccc" }}>
+          <Row data={tableHead} style={styles.head} textStyle={styles.headText} />
+          <Rows data={tableData} textStyle={styles.text} />
+        </Table>
 
-      <TouchableOpacity style={styles.resetButton} onPress={handleResetHistory}>
-        <Text style={styles.resetButtonText}>Reset History</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <TouchableOpacity style={styles.resetButton} onPress={handleResetHistory}>
+          <Text style={styles.resetButtonText}>Reset History</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, backgroundColor: "#fff", flex: 1 },
-  title: { fontSize: 24, fontWeight: "600", marginBottom: 16, marginTop: 45 },
+  container: {
+    padding: 16,
+    backgroundColor: "#fff",
+    flexGrow: 1,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "600",
+    marginBottom: 16,
+    marginTop: 50,
+  },
   search: {
     height: 40,
     borderColor: "#ccc",
@@ -84,12 +99,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 16,
   },
-  head: { height: 40, backgroundColor: "#f1f8ff" },
-  headText: { margin: 6, fontWeight: "bold" },
-  text: { margin: 6 }, 
+  head: {
+    height: 40,
+    backgroundColor: "#f1f8ff",
+  },
+  headText: {
+    margin: 6,
+    fontWeight: "bold",
+  },
+  text: {
+    margin: 6,
+  },
   resetButton: {
     marginTop: 20,
-    backgroundColor: "#e74c3c",
+    backgroundColor: "#0077b6",
     padding: 12,
     borderRadius: 8,
     alignItems: "center",
