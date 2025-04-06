@@ -67,7 +67,7 @@ export default function PillHistoryTable() {
     try {
       setIsLoading(true);
       const response = await fetch(
-        `http://100.80.14.54:5001/ddi?drug1_name=${pill1}&drug2_name=${pill2}`,
+        `https://pills-backend-4.onrender.com/ddi?drug1_name=${pill1}&drug2_name=${pill2}`,
         { method: "GET" }
       );
       const result = await response.json();

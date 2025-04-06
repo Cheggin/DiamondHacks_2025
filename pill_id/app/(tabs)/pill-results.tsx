@@ -101,7 +101,7 @@ export default function PillResultScreen() {
       }, 400);
 
       console.log("Sending both photos for analysis...");
-      const response = await fetch('http://100.80.14.54:5001/analyze-both', {
+      const response = await fetch('https://pills-backend-4.onrender.com/analyze-both', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image1: base64_1, image2: base64_2 }),
