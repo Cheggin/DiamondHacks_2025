@@ -1,0 +1,2 @@
+domain: dev-yy45rm73v447bxs5.us.auth0.com
+clientid: UgJXQI6Nmcoh6wcZXO9v5y6vDVsn92gV
