@@ -458,13 +458,6 @@ def get_all_info(drug_name, limit=1):
     
     all_info = {}
     for section in sections:
-        # print(f"Retrieving section: {section}")
         all_info[section] = get_section(drug_name, section, limit)
     
     return all_info
-
-# if __name__ == "__main__":
-#     drug = "Tylenol"
-#     all_info = get_all_info(drug, limit=1)
-#     # print("\n=== All Info (JSON) ===")
-#     print(json.dumps(all_info, indent=2))
