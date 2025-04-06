@@ -74,22 +74,25 @@ export default function PillResultScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Gemini Pill Results</Text>
 
-      {/* Show progress bar */}
-      <Progress.Bar 
-        progress={progress} 
-        width={300} 
-        height={10} 
-        color="#3498db" 
-        borderWidth={0} 
-        unfilledColor="#ecf0f1"
-        borderRadius={5} 
-      />
+      {/* Show the analyzing text */}
+      {!result && (
+        <>
+          <Text style={{ marginTop: 16 }}>Analyzing photos...</Text>
+          <Progress.Bar 
+            progress={progress} 
+            width={300} 
+            height={10} 
+            color="#3498db" 
+            borderWidth={0} 
+            unfilledColor="#ecf0f1"
+            borderRadius={5} 
+            style={{ marginTop: 10 }}
+          />
+        </>
+      )}
 
       {result && (
         <Text style={{ marginTop: 16 }}>{result}</Text>
-      )}
-      {(!result) && (
-        <Text style={{ marginTop: 16 }}>Analyzing photos...</Text>
       )}
 
       {photo1 && (

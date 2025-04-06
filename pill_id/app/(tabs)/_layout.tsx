@@ -20,11 +20,12 @@ export default function TabLayout() {
         tabBarBackground: TabBarBackground,
         tabBarStyle: Platform.select({
           ios: {
-            position: 'absolute', // Optional: If you want the tab bar at the bottom to be fixed
+            position: 'absolute',
           },
           default: {},
         }),
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
@@ -44,16 +45,13 @@ export default function TabLayout() {
         options={{
           title: 'Pill Results',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="doc.text" color={color} />,
-          // tabBarLabelStyle: {
-          //   fontSize: 14, // Custom font size for the tab label
-          //   fontWeight: 'bold', // Custom font weight
-          //   color: Colors[colorScheme ?? 'light'].text, // Custom text color
-          // },
-          // tabBarStyle: {
-          //   backgroundColor: Colors[colorScheme ?? 'light'].background, // Tab bar background color
-          //   height: 60, // Set a custom height for the tab bar
-          //   paddingBottom: 8, // Padding for the tab bar for better spacing
-          // },
+        }}
+      />
+      <Tabs.Screen
+        name="test"
+        options={{
+          title: 'Test',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="flask.fill" color={color} />,
         }}
       />
     </Tabs>
