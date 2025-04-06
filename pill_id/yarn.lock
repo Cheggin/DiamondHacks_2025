@@ -6757,7 +6757,7 @@ react-native-is-edge-to-edge@^1.1.6:
   resolved "https://registry.npmjs.org/react-native-is-edge-to-edge/-/react-native-is-edge-to-edge-1.1.7.tgz"
   integrity sha512-EH6i7E8epJGIcu7KpfXYXiV2JFIYITtq+rVS8uEb+92naMRBdxhTuS8Wn2Q7j9sqyO0B+Xbaaf9VdipIAmGW4w==
 
-react-native-progress@^5.0.1:
+react-native-progress@^5.0.0:
   version "5.0.1"
   resolved "https://registry.npmjs.org/react-native-progress/-/react-native-progress-5.0.1.tgz"
   integrity sha512-TYfJ4auAe5vubDma2yfFvt7ktSI+UCfysqJnkdHEcLXqAitRFOozgF/cLgN5VNi/iLdaf3ga1ETi2RF4jVZ/+g==
@@ -6794,7 +6794,7 @@ react-native-screens@*, "react-native-screens@>= 4.0.0", react-native-screens@~4
     react-freeze "^1.0.0"
     warn-once "^0.1.0"
 
-react-native-svg@*:
+react-native-svg@*, react-native-svg@^15.11.2:
   version "15.11.2"
   resolved "https://registry.npmjs.org/react-native-svg/-/react-native-svg-15.11.2.tgz"
   integrity sha512-+YfF72IbWQUKzCIydlijV1fLuBsQNGMT6Da2kFlo1sh+LE3BIm/2Q7AR1zAAR6L0BFLi1WaQPLfFUC9bNZpOmw==
