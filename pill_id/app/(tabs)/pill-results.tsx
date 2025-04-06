@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Platform, Animated, Easing } from 'react-native
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
 import * as Progress from 'react-native-progress';
-import { PillResultStore } from '../(tabs)/pill-result-store';
+import { PillResultStore } from '../../components/pill-result-store';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function PillResultScreen() {
@@ -101,7 +101,7 @@ export default function PillResultScreen() {
       }, 400);
 
       console.log("Sending both photos for analysis...");
-      const response = await fetch('http://100.80.14.54:5001/analyze-both', {
+      const response = await fetch('http://100.81.22.243:5001/analyze-both', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image1: base64_1, image2: base64_2 }),

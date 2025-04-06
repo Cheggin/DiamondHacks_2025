@@ -8,7 +8,7 @@ import {
   FlatList,
   ScrollView,
 } from "react-native";
-import { PillHistory } from "./pill-history-class";
+import { PillHistory } from "../../components/pill-history-class";
 import { useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import GlobalHeader from "../../components/global-header";

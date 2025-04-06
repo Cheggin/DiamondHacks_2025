@@ -1,6 +1,6 @@
 import { View, StyleSheet, Image, ScrollView } from 'react-native';
 import { router } from 'expo-router';
-import { useAppState } from './app-state';
+import { useAppState } from '../../components/app-state';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -74,6 +74,7 @@ const styles = StyleSheet.create({
         height: 252,
         marginBottom: 4,
         resizeMode: 'contain',
+        marginTop: 20,
     },
     welcome: {
         fontSize: 22,

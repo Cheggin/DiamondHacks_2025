@@ -11,8 +11,8 @@ import {
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
-import { PillHistory } from './pill-history-class';
-import { PillResultStore } from '../(tabs)/pill-result-store';
+import { PillHistory } from '../../components/pill-history-class';
+import { PillResultStore } from '../../components/pill-result-store';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 
