@@ -17,7 +17,11 @@ import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native'; 
 import { useCallback } from 'react'; 
 
-export default function SelectableBoxPage() {
+type TestScreenProps = {
+    result: string;
+};
+
+export default function SelectableBoxPage({ result }: TestScreenProps) {
     const history = new PillHistory();
     const router = useRouter();
     const [selectedBox, setSelectedBox] = useState<number | null>(null);
@@ -25,7 +29,8 @@ export default function SelectableBoxPage() {
     const [modalIndex, setModalIndex] = useState<number | null>(null);
     
     const rawPills = PillResultStore.get();
-    
+    console.log("Raw Pills Data: ", rawPills); // Debugging line to check the raw pills data
+
     const pills = rawPills.filter((pill, index, self) => {
         return (
             index ===
@@ -138,11 +143,19 @@ export default function SelectableBoxPage() {
         <View style={styles.modalContent}>
         {modalIndex !== null && (
             <>
-            <Text style={styles.modalTitle}>{pills[modalIndex].title}</Text>
             <Text>Imprint: {pills[modalIndex].imprint}</Text>
             <Text>Color: {pills[modalIndex].color}</Text>
             <Text>Shape: {pills[modalIndex].shape}</Text>
             <Text>Strength: {pills[modalIndex].strength}</Text>
+
+            <Text style={{ marginTop: 12, fontWeight: 'bold' }}>Reported Side Effects:</Text>
+            {pills[modalIndex].side_effects?.length > 0 ? (
+                pills[modalIndex].side_effects.map((effect: string, i: number) => (
+                    <Text key={i} style={{ marginLeft: 8 }}>• {effect}</Text>
+                ))
+            ) : (
+                <Text style={{ marginLeft: 8 }}>No side effects found.</Text>
+            )}
             <TouchableOpacity
             onPress={() => setModalVisible(false)}
             style={styles.closeModal}

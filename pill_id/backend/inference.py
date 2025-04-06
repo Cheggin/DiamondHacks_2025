@@ -427,6 +427,9 @@ def get_dosage_and_administration(drug_name, limit=1):
 def get_dosage_and_administration_table(drug_name, limit=1):
     return get_section(drug_name, "dosage_and_administration_table", limit)
 
+def get_indications_and_usage(drug_name, limit=1):
+    return get_section(drug_name, "indications_and_usage", limit)
+
 def get_storage_and_handling(drug_name, limit=1):
     return get_section(drug_name, "storage_and_handling", limit)
 
