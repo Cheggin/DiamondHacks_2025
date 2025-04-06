@@ -3,7 +3,7 @@ import base64
 from flask_cors import CORS
 from PIL import Image
 from io import BytesIO
-from inference import inference
+from inference import query_pill_features, query_drugs, query_pill_count
 
 app = Flask(__name__)
 CORS(app)
@@ -37,7 +37,7 @@ def analyze():
         new_image.paste(image2, (0, image1.height))
 
         combined_image_bytes = BytesIO()
-        result = inference(combined_image_bytes)
+        result = query_drugs(*query_pill_features(combined_image_bytes))
 
         return jsonify({
             'response1': result.text,
