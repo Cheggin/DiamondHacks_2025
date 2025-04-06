@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Platform, TouchableOpacity } from 'react-native';
+import { Platform, View, Text, StyleSheet } from 'react-native';
 
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -10,32 +10,36 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { useAppState } from './app-state';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-  const { hasStarted } = useAppState(); 
+  const colorScheme = useColorScheme() ?? 'light';
+  const { hasStarted } = useAppState();
+  const colors = Colors[colorScheme];
 
   return (
     <Tabs
       screenOptions={({ route }) => ({
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: colors.tint,
         headerShown: false,
         tabBarBackground: TabBarBackground,
+        tabBarLabelStyle: styles.tabBarLabel,
         tabBarButton: (props) => {
           const isHome = route.name === 'index';
           const isDisabled = !hasStarted && !isHome;
 
-          // Disable tab if not started and it's not Home
-          if (isDisabled) {
-            return (
-              <TouchableOpacity disabled style={[props.style, { opacity: 0.3 }]} />
-            );
+          // Only show Home tab when not started
+          if (!hasStarted && !isHome) {
+            return null;
           }
 
           return <HapticTab {...props} />;
         },
-        tabBarStyle: Platform.select({
-          ios: { position: 'absolute' },
-          default: {},
-        }),
+        tabBarStyle: [
+          Platform.select({
+            ios: { position: 'absolute' },
+            default: {},
+          }),
+          // If not started, center the home tab
+          !hasStarted && styles.centeredTabBar,
+        ],
       })}
     >
       <Tabs.Screen
@@ -43,16 +47,16 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
+            <IconSymbol size={24} name="house.fill" color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="pill-upload"
         options={{
-          title: 'Pill Upload',
+          title: 'Scan Pill',
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="square.and.arrow.up.fill" color={color} />
+            <IconSymbol size={24} name="square.and.arrow.up.fill" color={color} />
           ),
         }}
       />
@@ -65,21 +69,33 @@ export default function TabLayout() {
       <Tabs.Screen
         name="test"
         options={{
-          title: 'Pill Identification',
+          title: 'Identify',
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="flask.fill" color={color} />
+            <IconSymbol size={24} name="flask.fill" color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="pill-history-page"
         options={{
-          title: 'Pill History',
+          title: 'History',
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="clock.fill" color={color} />
+            <IconSymbol size={24} name="clock.fill" color={color} />
           ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBarLabel: {
+    fontWeight: '600',
+    fontSize: 11,
+    fontFamily: Platform.OS === 'ios' ? 'Helvetica' : 'Roboto',
+  },
+  centeredTabBar: {
+    justifyContent: 'center', 
+    alignItems: 'center',
+  },
+});

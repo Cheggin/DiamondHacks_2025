@@ -1,16 +1,31 @@
 import { useEffect, useState } from 'react';
-import { View, Image, Text, ScrollView, StyleSheet, Platform } from 'react-native';
+import { 
+  View, 
+  Image, 
+  ScrollView, 
+  StyleSheet, 
+  Platform,
+  Alert,
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
 import * as Progress from 'react-native-progress';
-import { PillResultStore } from '../(tabs)/pill-result-store';
-
+import { PillResultStore } from './pill-result-store';
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import { Card } from '@/components/Card';
+import { ThemedButton } from '@/components/ThemedButton';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function PillResultScreen() {
   const { photo1, photo2 } = useLocalSearchParams();
   const router = useRouter();
-  const [result, setResult] = useState('');
   const [progress, setProgress] = useState(0);
+  const [step, setStep] = useState<'uploading' | 'analyzing' | 'processing' | 'complete' | 'error'>('uploading');
+  const [error, setError] = useState<string | null>(null);
+  const colorScheme = useColorScheme() ?? 'light';
+  const colors = Colors[colorScheme];
 
   useEffect(() => {
     if (photo1 && photo2) {
@@ -60,18 +75,19 @@ export default function PillResultScreen() {
 
   const sendBothPhotos = async (photo1Uri: string, photo2Uri: string) => {
     try {
+      // Start with upload phase
+      setStep('uploading');
+      setProgress(0.1);
+      
       const base64_1 = await getBase64(photo1Uri);
+      setProgress(0.3);
+      
       const base64_2 = await getBase64(photo2Uri);
-
-      let progressInterval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 1) {
-            clearInterval(progressInterval);
-            return 1;
-          }
-          return prev + 0.1;
-        });
-      }, 500);
+      setProgress(0.5);
+      
+      // Move to analyzing phase
+      setStep('analyzing');
+      setProgress(0.6);
 
       const response = await fetch('http://100.80.6.211:5001/analyze-both', {
         method: 'POST',
@@ -79,75 +95,202 @@ export default function PillResultScreen() {
         body: JSON.stringify({ image1: base64_1, image2: base64_2 }),
       });
 
+      // Check if response is ok
+      if (!response.ok) {
+        throw new Error(`Server responded with status: ${response.status}`);
+      }
+
+      // Move to processing phase
+      setStep('processing');
+      setProgress(0.8);
+
       const data = await response.json();
-      clearInterval(progressInterval);
+      
+      // Complete the process
+      setStep('complete');
       setProgress(1);
-      setResult(JSON.stringify(data, null, 2));
 
       const structured = extractAllChoices(data);
+      
+      if (structured.length === 0) {
+        setStep('error');
+        setError('No pill matches were found. Please try again with clearer photos.');
+        return;
+      }
+
       PillResultStore.set(structured);
-      router.push('/test');
+      
+      // Navigate to results page after brief delay to show completion
+      setTimeout(() => {
+        router.push('/test');
+      }, 1000);
 
     } catch (err) {
-      console.error('Error sending to Gemini:', err);
-      setResult('Error analyzing combined image.');
+      console.error('Error analyzing pill:', err);
+      setStep('error');
+      setError('There was an error analyzing your pill. Please try again.');
       setProgress(0);
     }
   };
 
+  const getStepLabel = () => {
+    switch(step) {
+      case 'uploading': return 'Uploading photos...';
+      case 'analyzing': return 'Analyzing pill features...';
+      case 'processing': return 'Processing matches...';
+      case 'complete': return 'Analysis complete!';
+      case 'error': return 'Error';
+      default: return 'Processing...';
+    }
+  };
+
+  const handleRetry = () => {
+    router.replace('/pill-upload');
+  };
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Gemini Pill Results</Text>
+    <ThemedView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ThemedText type="header" style={styles.title}>
+          Pill Analysis
+        </ThemedText>
 
-      {photo1 && <Image source={{ uri: photo1 as string }} style={styles.image} />}
-      {photo2 && <Image source={{ uri: photo2 as string }} style={styles.image} />}
+        <Card 
+          title="Your photos"
+          elevation="low"
+          style={styles.photoCard}
+        >
+          <View style={styles.photosContainer}>
+            {photo1 && (
+              <View style={styles.photoWrapper}>
+                <ThemedText type="caption" style={styles.photoLabel}>Front</ThemedText>
+                <Image source={{ uri: photo1 as string }} style={styles.image} />
+              </View>
+            )}
+            
+            {photo2 && (
+              <View style={styles.photoWrapper}>
+                <ThemedText type="caption" style={styles.photoLabel}>Back</ThemedText>
+                <Image source={{ uri: photo2 as string }} style={styles.image} />
+              </View>
+            )}
+          </View>
+        </Card>
 
-      {!result && (
-        <>
-          <Text style={{ marginTop: 16 }}>Analyzing photos...</Text>
-          <Progress.Bar 
-            progress={progress} 
-            width={300} 
-            height={10} 
-            color="#3498db" 
-            borderWidth={0} 
-            unfilledColor="#ecf0f1"
-            borderRadius={5} 
-            style={{ marginTop: 10 }}
-          />
-        </>
-      )}
+        <Card 
+          title="Analysis Status"
+          elevation="medium" 
+          style={styles.statusCard}
+        >
+          <ThemedText type="defaultSemiBold" style={styles.stepLabel}>
+            {getStepLabel()}
+          </ThemedText>
+          
+          {step !== 'error' ? (
+            <View style={styles.progressContainer}>
+              <Progress.Bar
+                progress={progress}
+                width={null}
+                height={8}
+                color={colors.tint}
+                unfilledColor={colorScheme === 'light' ? '#e0e0e0' : '#333333'}
+                borderWidth={0}
+                borderRadius={4}
+                style={styles.progressBar}
+              />
+              <ThemedText type="caption" style={styles.progressText}>
+                {Math.round(progress * 100)}%
+              </ThemedText>
+            </View>
+          ) : (
+            <View style={styles.errorContainer}>
+              <ThemedText style={styles.errorText}>{error}</ThemedText>
+              <View style={styles.retryButton}>
+                <ThemedButton
+                  title="Try Again"
+                  onPress={handleRetry}
+                  variant="primary"
+                  size="medium"
+                />
+              </View>
+            </View>
+          )}
+        </Card>
 
-      {result && (
-        <Text style={styles.resultText}>{result}</Text>
-      )}
-    </ScrollView>
+        {step === 'complete' && (
+          <ThemedText type="subtitle" style={styles.processingText}>
+            Redirecting to results...
+          </ThemedText>
+        )}
+      </ScrollView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-    gap: 16,
-    alignItems: 'center',
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingTop: 60,
+    paddingBottom: 40,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    paddingTop: 30,
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  photoCard: {
+    marginBottom: 20,
+  },
+  photosContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  photoWrapper: {
+    width: '48%',
+  },
+  photoLabel: {
+    marginBottom: 8,
+    textAlign: 'center',
   },
   image: {
-    width: 300,
-    height: 300,
-    resizeMode: 'contain',
+    width: '100%',
+    aspectRatio: 1,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ccc',
+    resizeMode: 'cover',
   },
-  resultText: {
-    marginTop: 16,
-    fontFamily: Platform.OS === 'web' ? 'monospace' : 'Courier',
-    fontSize: 14,
-    paddingHorizontal: 8,
+  statusCard: {
+    marginBottom: 20,
+  },
+  stepLabel: {
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  progressContainer: {
+    marginVertical: 8,
+  },
+  progressBar: {
+    width: '100%',
+    marginBottom: 8,
+  },
+  progressText: {
+    textAlign: 'right',
+  },
+  errorContainer: {
+    alignItems: 'center',
+    padding: 10,
+  },
+  errorText: {
+    color: '#dc3545',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  retryButton: {
+    marginTop: 10,
+  },
+  processingText: {
+    textAlign: 'center',
+    marginTop: 20,
   },
 });
