@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { View, Image, Text, ScrollView, StyleSheet, Platform } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
+import * as Progress from 'react-native-progress';  // Import Progress bar
 
 export default function PillResultScreen() {
   const { photo1, photo2 } = useLocalSearchParams();
   const [result, setResult] = useState('');
+  const [progress, setProgress] = useState(0); // For progress tracking
 
   useEffect(() => {
     if (photo1 && photo2) {
@@ -55,6 +57,7 @@ export default function PillResultScreen() {
     } catch (err) {
       console.error('Error sending to Gemini:', err);
       setResult('Error analyzing combined image.');
+      setProgress(0); // Reset progress on error
     }
   };
 
@@ -101,3 +104,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
 });
+

@@ -6,6 +6,7 @@ export type ThemedTextProps = TextProps & {
   lightColor?: string;
   darkColor?: string;
   type?: 'default' | 'title' | 'defaultSemiBold' | 'subtitle' | 'link';
+  greyText?: boolean;
 };
 
 export function ThemedText({
@@ -13,6 +14,7 @@ export function ThemedText({
   lightColor,
   darkColor,
   type = 'default',
+  greyText = false,
   ...rest
 }: ThemedTextProps) {
   const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
@@ -20,7 +22,7 @@ export function ThemedText({
   return (
     <Text
       style={[
-        { color },
+        { color: greyText ? '#808080' : color },
         type === 'default' ? styles.default : undefined,
         type === 'title' ? styles.title : undefined,
         type === 'defaultSemiBold' ? styles.defaultSemiBold : undefined,
@@ -37,11 +39,13 @@ const styles = StyleSheet.create({
   default: {
     fontSize: 16,
     lineHeight: 24,
+    fontWeight: 'normal',
+    marginBottom: 4,
   },
   defaultSemiBold: {
     fontSize: 16,
     lineHeight: 24,
-    fontWeight: '600',
+    fontWeight: 'bold', 
   },
   title: {
     fontSize: 32,
