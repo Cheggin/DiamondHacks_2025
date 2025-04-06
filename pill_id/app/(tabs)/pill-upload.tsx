@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { Button, Image, StyleSheet, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';  // Import useFocusEffect
 
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedButton } from '@/components/ThemedButton';
+import React from 'react';
 
 export const unstable_settings = {
   unmountOnBlur: true,
@@ -16,10 +18,12 @@ export default function PhotoUploadScreen() {
   const [photo1, setPhoto1] = useState<string | null>(null);
   const [photo2, setPhoto2] = useState<string | null>(null);
 
-  useEffect(() => {
-    setPhoto1(null);
-    setPhoto2(null);
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      setPhoto1(null);
+      setPhoto2(null);
+    }, [])
+  );
 
   const pickImage = async (setImage: (uri: string) => void, imageType: 'photo1' | 'photo2') => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
@@ -56,13 +60,11 @@ export default function PhotoUploadScreen() {
       <ThemedView style={styles.container}>
         <ThemedText style={styles.centered} type="title">Upload Pill Photos</ThemedText>
 
-        {/* Box wrapping both button and photo for photo1 */}
         <View style={styles.uploadBox}>
           <ThemedButton title="Take front of pill photo" onPress={() => pickImage(setPhoto1, 'photo1')} />
           {photo1 && <Image source={{ uri: photo1 }} style={styles.imagePreview} />}
         </View>
 
-        {/* Box wrapping both button and photo for photo2 */}
         <View style={styles.uploadBox}>
           <ThemedButton title="Take back of pill photo" onPress={() => pickImage(setPhoto2, 'photo2')} />
           {photo2 && <Image source={{ uri: photo2 }} style={styles.imagePreview} />}
@@ -87,7 +89,7 @@ const styles = StyleSheet.create({
     height: 200,
     resizeMode: 'contain',
     borderRadius: 8,
-    marginTop: 8, // Added margin to create a gap between the button and the photo
+    marginTop: 8,
   },
   uploadBox: {
     padding: 16,
@@ -96,7 +98,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 12,
     backgroundColor: '#f9f9f9',
-    alignItems: 'center',  // Center content inside the box
+    alignItems: 'center', 
     justifyContent: 'center',
   },
 });
