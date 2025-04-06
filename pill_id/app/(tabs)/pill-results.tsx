@@ -29,14 +29,9 @@ export default function PillResultScreen() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image1: base64_1, image2: base64_2 }),
       });
-    // const response = await fetch('http://100.80.6.211:5001/test', {
-    //     method: 'GET'
-    // })
 
       const data = await response.json();
-      // setResult1(data.response1);
-      // setResult2(data.response2);
-      setResult(data.response);
+      setResult(JSON.stringify(data));
     } catch (err) {
       console.error('Error sending to Gemini:', err);
       // setResult1('Error analyzing image 1.');

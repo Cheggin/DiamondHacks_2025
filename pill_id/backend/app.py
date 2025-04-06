@@ -44,11 +44,17 @@ def analyze():
 
         # Pass the actual image bytes to inference
         result = inference(combined_image_bytes)
+        
+        # print the variable names of result
+        # print(result.__dict__.keys())
 
-        return jsonify({
-            'response': result.text,
-            # 'response': 'testing '
-        })
+        # return jsonify({
+        #     'response': result.text,
+        #     # 'response': 'testing '
+        # })
+        print(result["1st choice"])
+        return jsonify(result)
+        
 
     except Exception as e:
         print(f'Error: {e}')
