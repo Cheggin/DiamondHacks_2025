@@ -127,6 +127,7 @@ export default function SelectableBoxPage() {
                     'Not Added',
                     'This medication is already in your history.'
                   );
+                  router.push('/(tabs)/pill-history-page');
                 }
               } else {
                 alert('Please select a box');
