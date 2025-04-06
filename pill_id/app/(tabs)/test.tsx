@@ -17,11 +17,7 @@ import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native'; 
 import { useCallback } from 'react'; 
 
-type TestScreenProps = {
-    result: string;
-};
-
-export default function SelectableBoxPage({ result }: TestScreenProps) {
+export default function SelectableBoxPage() {
     const history = new PillHistory();
     const router = useRouter();
     const [selectedBox, setSelectedBox] = useState<number | null>(null);

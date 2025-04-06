@@ -180,7 +180,7 @@
           <Text style={styles.resultText}>{result}</Text>
         )}
 
-        <TestScreen result={result} />
+        {/* <TestScreen result={result} /> */}
       </ScrollView>
     );
   }
