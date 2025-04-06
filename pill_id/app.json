@@ -3,6 +3,9 @@
     "name": "pill_id",
     "slug": "pill_id",
     "version": "1.0.0",
+    "dev": {
+      "https": true
+    },
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",

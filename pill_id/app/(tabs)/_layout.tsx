@@ -1,5 +1,5 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { Tabs, useRouter } from 'expo-router';
+import React, { useEffect } from 'react';
 import { Platform, TouchableOpacity } from 'react-native';
 
 import { HapticTab } from '@/components/HapticTab';
@@ -8,10 +8,29 @@ import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useAppState } from './app-state';
+import { useAuth0 } from '@/components/Auth0ProviderWrapper';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const { hasStarted } = useAppState(); 
+  const { hasStarted, setHasStarted } = useAppState();
+  const { isAuthenticated, isLoading } = useAuth0();
+  const router = useRouter();
+
+  // Check authentication status when the component mounts
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      // Redirect to login if not authenticated
+      router.replace('/login');
+    } else if (isAuthenticated) {
+      // If authenticated, mark as started
+      setHasStarted(true);
+    }
+  }, [isAuthenticated, isLoading, router, setHasStarted]);
+
+  // If still loading auth status or not authenticated, don't render tabs
+  if (isLoading || !isAuthenticated) {
+    return null;
+  }
 
   return (
     <Tabs
@@ -78,6 +97,12 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="clock.fill" color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="login"
+        options={{
+          href: null, // Hide from tabs (though we're not using this one anymore)
         }}
       />
     </Tabs>
