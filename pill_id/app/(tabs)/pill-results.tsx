@@ -54,7 +54,7 @@ export default function PillResultScreen() {
         });
       }, 500);
 
-      const response = await fetch('http://100.80.6.211:5001/analyze-both', {
+      const response = await fetch('http://100.80.6.211:8082/analyze-both', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image1: base64_1, image2: base64_2 }),
