@@ -320,3 +320,148 @@ def query_ddi(drug_name1, drug_name2):
 
     return results
 
+def parse_html_table(html_str):
+    """
+    Parses an HTML table and returns its contents as a list of dictionaries.
+    Each dictionary represents a row with keys "col1", "col2", etc.
+    If a cell contains a <list> element, the cell value becomes a list of
+    text from each <item> element.
+    """
+    soup = BeautifulSoup(html_str, "html.parser")
+    table = soup.find("table")
+    if not table:
+        return []
+    
+    rows = []
+    for tr in table.find_all("tr"):
+        cols = tr.find_all("td")
+        if not cols:
+            continue  # Skip rows without <td> elements
+        row = {}
+        for i, td in enumerate(cols, start=1):
+            list_tag = td.find("list")
+            if list_tag:
+                items = [item.get_text(strip=True) for item in list_tag.find_all("item")]
+                cell_value = items
+            else:
+                cell_value = td.get_text(strip=True)
+            row[f"col{i}"] = cell_value
+        rows.append(row)
+    return rows
+
+def get_product_labeling(drug_name, limit=1):
+    """
+    Retrieves product labeling information from openFDA for a given drug's name.
+    It first searches using the openFDA.brand_name field; if no results are found,
+    it then searches using the openFDA.generic_name field.
+    """
+    base_url = "https://api.fda.gov/drug/label.json"
+    
+    # Try searching using the brand name field
+    query_brand = f'openfda.brand_name:"{drug_name}"'
+    params = {"search": query_brand, "limit": limit}
+    response = requests.get(base_url, params=params)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("results"):
+            return data
+    
+    # If no results, try searching using the generic name field
+    query_generic = f'openfda.generic_name:"{drug_name}"'
+    params = {"search": query_generic, "limit": limit}
+    response = requests.get(base_url, params=params)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("results"):
+            return data
+    
+    print(f"Error {response.status_code}: {response.text}")
+    return None
+
+def get_section(drug_name, section_key, limit=1):
+    """
+    Retrieves a specific section from the product labeling data.
+    If the content contains an HTML table, it is parsed into a structured format.
+    
+    Returns:
+        list: A list containing the section data for each result.
+    """
+    labeling_data = get_product_labeling(drug_name, limit)
+    section_results = []
+    if not labeling_data:
+        return section_results
+
+    for result in labeling_data.get("results", []):
+        section_data = result.get(section_key)
+        if section_data:
+            parsed_data = []
+            for content in section_data:
+                if "<table" in content.lower():
+                    parsed_table = parse_html_table(content)
+                    parsed_data.append(parsed_table)
+                else:
+                    parsed_data.append(content)
+            section_results.append(parsed_data)
+        else:
+            section_results.append(None)
+    return section_results
+
+def get_ask_doctor(drug_name, limit=1):
+    return get_section(drug_name, "ask_doctor", limit)
+
+def get_ask_doctor_or_pharmacist(drug_name, limit=1):
+    return get_section(drug_name, "ask_doctor_or_pharmacist", limit)
+
+def get_stop_use(drug_name, limit=1):
+    return get_section(drug_name, "stop_use", limit)
+
+def get_pregnancy_or_breast_feeding(drug_name, limit=1):
+    return get_section(drug_name, "pregnancy_or_breast_feeding", limit)
+
+def get_keep_out_of_reach_of_children(drug_name, limit=1):
+    return get_section(drug_name, "keep_out_of_reach_of_children", limit)
+
+def get_dosage_and_administration(drug_name, limit=1):
+    return get_section(drug_name, "dosage_and_administration", limit)
+
+def get_dosage_and_administration_table(drug_name, limit=1):
+    return get_section(drug_name, "dosage_and_administration_table", limit)
+
+def get_storage_and_handling(drug_name, limit=1):
+    return get_section(drug_name, "storage_and_handling", limit)
+
+def get_purpose(drug_name, limit=1):
+    return get_section(drug_name, "purpose", limit)
+
+def get_all_info(drug_name, limit=1):
+    """
+    Retrieves all relevant sections from the product labeling for a given drug.
+    
+    Returns:
+        dict: A dictionary containing all sections retrieved.
+    """
+    sections = [
+        "ask_doctor",
+        "ask_doctor_or_pharmacist",
+        "stop_use",
+        "pregnancy_or_breast_feeding",
+        "keep_out_of_reach_of_children",
+        "dosage_and_administration",
+        "dosage_and_administration_table",
+        "storage_and_handling",
+        "purpose",
+        "indications_and_usage"
+    ]
+    
+    all_info = {}
+    for section in sections:
+        # print(f"Retrieving section: {section}")
+        all_info[section] = get_section(drug_name, section, limit)
+    
+    return all_info
+
+# if __name__ == "__main__":
+#     drug = "Tylenol"
+#     all_info = get_all_info(drug, limit=1)
+#     # print("\n=== All Info (JSON) ===")
+#     print(json.dumps(all_info, indent=2))
