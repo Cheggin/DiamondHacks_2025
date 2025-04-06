@@ -13,13 +13,21 @@ import { useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import GlobalHeader from "../../components/global-header";
 import { Ionicons } from "@expo/vector-icons";
+import { ActivityIndicator } from "react-native";
+
 
 const history = new PillHistory();
 
 export default function PillHistoryTable() {
   const [tableData, setTableData] = useState<any[]>([]);
   const [searchText, setSearchText] = useState("");
+  const [selectedPills, setSelectedPills] = useState<any[]>([]);
+  const [interactionResults, setInteractionResults] = useState<
+    { title: string; description: string; applies_to: string }[]
+  >([]);
   const insets = useSafeAreaInsets();
+  const [isLoading, setIsLoading] = useState(false);
+
 
   useFocusEffect(
     useCallback(() => {
@@ -50,17 +58,80 @@ export default function PillHistoryTable() {
 
   const handleResetHistory = async () => {
     await history.clear();
+    setSelectedPills([]);
+    setInteractionResults([]);
     refreshTable();
   };
 
+  const comparePills = async (pill1: any, pill2: any) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(
+        `http://100.80.14.54:5001/ddi?drug1_name=${pill1}&drug2_name=${pill2}`,
+        { method: "GET" }
+      );
+      const result = await response.json();
+      const ddiObject = result.ddi;
+  
+      if (ddiObject && typeof ddiObject === "object") {
+        const interactionsArray = Object.values(ddiObject);
+        setInteractionResults(interactionsArray as any[]);
+      } else {
+        setInteractionResults([]);
+      }
+    } catch (error) {
+      console.error("Comparison API error:", error);
+      setInteractionResults([
+        {
+          title: "Error",
+          description: "Could not fetch interactions.",
+          applies_to: "",
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+
+  const handlePillPress = (pill: any) => {
+    let newSelection;
+
+    if (selectedPills.some((p) => p.key === pill.key)) {
+      newSelection = selectedPills.filter((p) => p.key !== pill.key);
+    } else if (selectedPills.length < 2) {
+      newSelection = [...selectedPills, pill];
+    } else {
+      return;
+    }
+
+    setSelectedPills(newSelection);
+  };
+
+  const handleComparePress = async () => {
+    const drug1 = selectedPills[0].name.split(" ")[0];
+    const drug2 = selectedPills[1].name.split(" ")[0];
+
+    await comparePills(drug1, drug2);
+    setSelectedPills([]);
+  };
+
   const renderItem = ({ item, index }: { item: any; index: number }) => (
-    <View style={[styles.row, index % 2 === 0 && styles.altRow]}>
-      <Text style={styles.cell}>{item.name}</Text>
-      <Text style={styles.cell}>{item.shape}</Text>
-      <Text style={styles.cell}>{item.color}</Text>
-      <Text style={styles.cell}>{item.dosage}</Text>
-      <Text style={styles.cell}>{item.time}</Text>
-    </View>
+    <TouchableOpacity onPress={() => handlePillPress(item)} activeOpacity={0.7}>
+      <View
+        style={[
+          styles.row,
+          index % 2 === 0 && styles.altRow,
+          selectedPills.some((p) => p.key === item.key) && styles.selectedRow,
+        ]}
+      >
+        <Text style={styles.cell}>{item.name}</Text>
+        <Text style={styles.cell}>{item.shape}</Text>
+        <Text style={styles.cell}>{item.color}</Text>
+        <Text style={styles.cell}>{item.dosage}</Text>
+        <Text style={styles.cell}>{item.time}</Text>
+      </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -96,12 +167,39 @@ export default function PillHistoryTable() {
             <TouchableOpacity style={styles.resetButton} onPress={handleResetHistory}>
               <Text style={styles.resetButtonText}>Reset History</Text>
             </TouchableOpacity>
+
+            {selectedPills.length === 2 && (
+              <TouchableOpacity style={styles.resetButton} onPress={handleComparePress}>
+                <Text style={styles.resetButtonText}>Compare Selected Pills</Text>
+              </TouchableOpacity>
+            )}
+            {isLoading && (
+              <View style={{ marginTop: 16, alignItems: "center" }}>
+                <Text style={{ marginBottom: 8 }}>Checking interactions...</Text>
+                <ActivityIndicator size="large" color="#0077b6" />
+              </View>
+            )}
           </>
         ) : (
           <View style={styles.emptyState}>
             <Ionicons name="medkit-outline" size={64} color="#90e0ef" />
             <Text style={styles.emptyText}>No pill history yet</Text>
             <Text style={styles.emptySubtext}>Captured pills will show up here.</Text>
+          </View>
+        )}
+
+        {interactionResults.length > 0 && (
+          <View style={styles.interactionBox}>
+            <Text style={styles.interactionTitle}>Drug Interaction Warnings:</Text>
+            {interactionResults.map((interaction, idx) => (
+              <View key={idx} style={styles.interactionCard}>
+                <Text style={styles.interactionHeader}>
+                  {(interaction?.title ?? "Unknown").split(" ").join(" and ")}
+                </Text>
+                <Text style={styles.interactionSub}>{interaction?.applies_to ?? "N/A"}</Text>
+                <Text style={styles.interactionText}>{interaction?.description ?? "Please try again."}</Text>
+              </View>
+            ))}
           </View>
         )}
       </ScrollView>
@@ -152,6 +250,9 @@ const styles = StyleSheet.create({
   altRow: {
     backgroundColor: "#f9f9f9",
   },
+  selectedRow: {
+    backgroundColor: "#ade8f4",
+  },
   cell: {
     flex: 1,
     paddingVertical: 6,
@@ -186,5 +287,43 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#888",
     marginTop: 4,
+  },
+  interactionBox: {
+    marginTop: 24,
+    padding: 16,
+    backgroundColor: "#e0f7fa",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#b2ebf2",
+  },
+  interactionTitle: {
+    fontWeight: "bold",
+    fontSize: 16,
+    color: "#00796b",
+    marginBottom: 8,
+  },
+  interactionCard: {
+    marginBottom: 12,
+    padding: 12,
+    backgroundColor: "#ffffff",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#b2ebf2",
+  },
+  interactionHeader: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#023e8a",
+    marginBottom: 4,
+  },
+  interactionSub: {
+    fontSize: 13,
+    fontStyle: "italic",
+    color: "#555",
+    marginBottom: 4,
+  },
+  interactionText: {
+    fontSize: 14,
+    color: "#004d40",
   },
 });
