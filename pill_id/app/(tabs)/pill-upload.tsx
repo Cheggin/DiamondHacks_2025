@@ -40,6 +40,15 @@ export default function PhotoUploadScreen() {
     }, [])
   );
 
+  useEffect(() => {
+    if (isNavigating) {
+      const timer = setTimeout(() => {
+        setIsNavigating(false); // fallback to recover from stuck state
+      }, 10000); // 10 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [isNavigating]);
+
   const pickImage = async (setImage: (uri: string) => void, imageType: 'photo1' | 'photo2') => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     if (!permissionResult.granted) {
@@ -64,13 +73,9 @@ export default function PhotoUploadScreen() {
 
       if (nextPhoto1 && nextPhoto2) {
         setIsNavigating(true);
-        InteractionManager.runAfterInteractions(() => {
-          setTimeout(() => {
-            router.replace({
-              pathname: '/pill-results',
-              params: { photo1: nextPhoto1, photo2: nextPhoto2 },
-            });
-          }, 1500);
+        router.push({
+          pathname: '/pill-results',
+          params: { photo1: nextPhoto1, photo2: nextPhoto2 },
         });
       }
     }
@@ -96,7 +101,7 @@ export default function PhotoUploadScreen() {
       <ScrollView
         contentContainerStyle={[
           styles.scrollContainer,
-          { paddingTop: insets.top + 16 },
+          { paddingTop: insets.top + 72 }, // 24
         ]}
       >
         <ThemedView style={styles.container}>

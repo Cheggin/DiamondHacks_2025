@@ -15,6 +15,8 @@ const MAPPING = {
   'chevron.right': 'chevron-right',
   'square.and.arrow.up.fill': 'upload',
   'doc.text': 'code',
+  'flask.fill': 'folder',
+  'clock.fill': 'info',
 } as Partial<
   Record<
     import('expo-symbols').SymbolViewProps['name'],

@@ -100,13 +100,15 @@ export default function PillResultScreen() {
         });
       }, 400);
 
-      const response = await fetch('http://100.80.6.211:5001/analyze-both', {
+      console.log("Sending both photos for analysis...");
+      const response = await fetch('http://100.80.14.54:5001/analyze-both', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image1: base64_1, image2: base64_2 }),
       });
 
       const data = await response.json();
+      console.log("Received response from server:", data);
 
       for (const key of ['1st choice', '2nd choice', '3rd choice']) {
         const choiceName = data[key];
