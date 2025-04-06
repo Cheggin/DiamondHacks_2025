@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react';
-import { View, Image, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Image, Text, ScrollView, StyleSheet, Platform } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
-import * as Progress from 'react-native-progress';  // Import Progress bar
+import * as Progress from 'react-native-progress';
 
 export default function PillResultScreen() {
   const { photo1, photo2 } = useLocalSearchParams();
-  // const [result1, setResult1] = useState('');
-  // const [result2, setResult2] = useState('');
   const [result, setResult] = useState('');
-  const [progress, setProgress] = useState(0); // For progress tracking
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     if (photo1 && photo2) {
@@ -17,64 +15,69 @@ export default function PillResultScreen() {
     }
   }, [photo1, photo2]);
 
+  const uriToBase64Web = async (uri: string): Promise<string> => {
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64data = (reader.result as string).split(',')[1];
+        resolve(base64data);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  const getBase64 = async (uri: string): Promise<string> => {
+    if (Platform.OS === 'web') {
+      return await uriToBase64Web(uri);
+    } else {
+      return await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+    }
+  };
+
   const sendBothPhotos = async (photo1Uri: string, photo2Uri: string) => {
     try {
-      const base64_1 = await FileSystem.readAsStringAsync(photo1Uri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-      const base64_2 = await FileSystem.readAsStringAsync(photo2Uri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
+      const base64_1 = await getBase64(photo1Uri);
+      const base64_2 = await getBase64(photo2Uri);
 
-      // Simulate progress by updating the progress every second
       let progressInterval = setInterval(() => {
-        setProgress((prevProgress) => {
-          if (prevProgress >= 1) {
+        setProgress((prev) => {
+          if (prev >= 1) {
             clearInterval(progressInterval);
             return 1;
           }
-          return prevProgress + 0.1; // Increase progress by 10%
+          return prev + 0.1;
         });
       }, 500);
 
-      const response = await fetch('http://100.81.16.85:5001/analyze-both', {
+      const response = await fetch('http://100.80.6.211:5001/analyze-both', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image1: base64_1, image2: base64_2 }),
       });
 
       const data = await response.json();
-      setResult(JSON.stringify(data));
-
-      // Clear progress interval once response is received
       clearInterval(progressInterval);
-      setProgress(1);  // Set progress to 100% when done
+      setProgress(1);
+      setResult(JSON.stringify(data, null, 2));
     } catch (err) {
       console.error('Error sending to Gemini:', err);
       setResult('Error analyzing combined image.');
-      setProgress(0); // Reset progress on error
+      setProgress(0);
     }
   };
-
-  // {photo1 && (
-  //   <>
-  //     <Image source={{ uri: photo1 as string }} style={styles.image} />
-  //     <Text>{result1 || 'Analyzing photo 1...'}</Text>
-  //   </>
-  // )}
-
-  // {photo2 && (
-  //   <>
-  //     <Image source={{ uri: photo2 as string }} style={styles.image} />
-  //     <Text>{result2 || 'Analyzing photo 2...'}</Text>
-  //   </>
-  // )}
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Gemini Pill Results</Text>
 
-      {/* Show the analyzing text */}
+      {photo1 && <Image source={{ uri: photo1 as string }} style={styles.image} />}
+      {photo2 && <Image source={{ uri: photo2 as string }} style={styles.image} />}
+
       {!result && (
         <>
           <Text style={{ marginTop: 16 }}>Analyzing photos...</Text>
@@ -92,21 +95,7 @@ export default function PillResultScreen() {
       )}
 
       {result && (
-        <Text style={{ marginTop: 16 }}>{result}</Text>
-      )}
-
-      {photo1 && (
-        <>
-          <Image source={{ uri: photo1 as string }} style={styles.image} />
-          <Text>{/* {result1 || 'Analyzing photo 1...'} */}</Text>
-        </>
-      )}
-
-      {photo2 && (
-        <>
-          <Image source={{ uri: photo2 as string }} style={styles.image} />
-          <Text>{/* {result2 || 'Analyzing photo 2...'} */}</Text>
-        </>
+        <Text style={styles.resultText}>{result}</Text>
       )}
     </ScrollView>
   );
@@ -127,5 +116,13 @@ const styles = StyleSheet.create({
     height: 300,
     resizeMode: 'contain',
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  resultText: {
+    marginTop: 16,
+    fontFamily: Platform.OS === 'web' ? 'monospace' : 'Courier',
+    fontSize: 14,
+    paddingHorizontal: 8,
   },
 });
