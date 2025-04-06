@@ -121,6 +121,10 @@ export default function SelectableBoxPage() {
                     selectedPill.strength
                   );
                   await history.save();
+                  Alert.alert(
+                    'Added',
+                    `${selectedPill.title} has been added to your history.`
+                  );
                   router.push('/(tabs)/pill-history-page');
                 } else {
                   Alert.alert(
