@@ -20,8 +20,8 @@ def query_pill_features(image_bytes):
         location="us-central1",
     )
 
-    msg1_image1 = types.Part.from_uri(
-        file_uri="https://img.medscapestatic.com/pi/features/drugdirectory/octupdate/AUR00140.jpg",
+    msg1_image1 = types.Part.from_bytes(
+        data=image_bytes,
         mime_type="image/jpeg",
     )
 
@@ -100,7 +100,7 @@ def query_drugs(imprint: str, color: str, shape: str):
     else:
         print(f"Error fetching page: Status code {response.status_code}")
 
-def query_pill_count(imprint: str, color: str, shape: str):
+def query_pill_count(image_bytes, imprint: str, color: str, shape: str):
     # Load environment variables for API key
     load_dotenv()
     
@@ -108,25 +108,25 @@ def query_pill_count(imprint: str, color: str, shape: str):
     client = genai.Client(
         api_key=os.getenv("GENAI-APIKEY")
     )
+
+    image = types.Part.from_bytes(
+        data=image_bytes,
+        mime_type="image/jpeg",
+    )
     
-    # Use Gemini Flash 2.0 model
-    model = client.get_model("models/gemini-flash-2")
-    
-    # Create a simple hello world prompt
-    prompt = "Hello world! Please give a brief response."
-    
-    # Generate content
-    response = model.generate_content(prompt)
-    
-    # Print the response
-    print("Flash 2.0 Model Response:")
+    response = client.models.generate_content(
+        model="gemini-2.0-flash", 
+        contents=["Please count the number of pills with these characteristics: imprint: {}, color: {}, shape: {}. Return nothing but the number.".format(imprint, color, shape),
+                  image]
+    )   
+
     print(response.text)
     
-    return imprint, color, shape
+    return response.text
 
 
 # Load image and run inference
 with open("pill_id/backend/pill.jpeg", "rb") as file:
     local_image_bytes = file.read()
 
-query_drugs(*query_pill_features(local_image_bytes))
+query_pill_count(local_image_bytes, *query_pill_features(local_image_bytes))
