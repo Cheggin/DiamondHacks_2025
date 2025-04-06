@@ -40,6 +40,16 @@ export default function PhotoUploadScreen() {
     }, [])
   );
 
+  // ⬇️ Add this right after
+  useEffect(() => {
+    if (isNavigating) {
+      const timer = setTimeout(() => {
+        setIsNavigating(false); // fallback to recover from stuck state
+      }, 10000); // 10 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [isNavigating]);
+
   const pickImage = async (setImage: (uri: string) => void, imageType: 'photo1' | 'photo2') => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     if (!permissionResult.granted) {
@@ -62,17 +72,30 @@ export default function PhotoUploadScreen() {
       const nextPhoto1 = imageType === 'photo1' ? uri : photo1;
       const nextPhoto2 = imageType === 'photo2' ? uri : photo2;
 
+      // if (nextPhoto1 && nextPhoto2) {
+      //   setIsNavigating(true);
+      //   InteractionManager.runAfterInteractions(() => {
+      //     setTimeout(() => {
+      //       // router.replace({
+      //       //   pathname: '/pill-results',
+      //       //   params: { photo1: nextPhoto1, photo2: nextPhoto2 },
+      //       // });
+      //       router.push({
+      //         pathname: '/pill-results',
+      //         params: { photo1: nextPhoto1, photo2: nextPhoto2 },
+      //       });
+      //     }, 1500);
+      //   });
+      // }
+
       if (nextPhoto1 && nextPhoto2) {
         setIsNavigating(true);
-        InteractionManager.runAfterInteractions(() => {
-          setTimeout(() => {
-            router.replace({
-              pathname: '/pill-results',
-              params: { photo1: nextPhoto1, photo2: nextPhoto2 },
-            });
-          }, 1500);
+        router.push({
+          pathname: '/pill-results',
+          params: { photo1: nextPhoto1, photo2: nextPhoto2 },
         });
       }
+      
     }
   };
 
