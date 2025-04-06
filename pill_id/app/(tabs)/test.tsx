@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { PillHistory } from './pill-history-class'; // Adjust path if needed
-
+import React, { useEffect, useState } from 'react';
+import { PillHistory } from './pill-history-class';
 import {
     View,
     Text,
@@ -9,14 +8,46 @@ import {
     StyleSheet,
     Modal,
     SafeAreaView,
+    Alert,
     Platform,
+    KeyboardAvoidingView,
 } from 'react-native';
+import { PillResultStore } from '../(tabs)/pill-result-store';
+import { useRouter } from 'expo-router';
 
 export default function SelectableBoxPage() {
     const history = new PillHistory();
+    const router = useRouter();
     const [selectedBox, setSelectedBox] = useState<number | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [modalIndex, setModalIndex] = useState<number | null>(null);
+    
+    const rawPills = PillResultStore.get();
+    
+    const pills = rawPills.filter((pill, index, self) => {
+        return (
+            index ===
+            self.findIndex(
+                (p) =>
+                    p.title === pill.title &&
+                p.strength === pill.strength &&
+                p.imprint === pill.imprint &&
+                p.color === pill.color &&
+                p.shape === pill.shape
+            )
+        );
+    });
+    
+    useEffect(() => {
+        if (pills.length === 0) {
+            Alert.alert('No drugs were found!', 'Please try again.', [
+                {
+                    text: 'OK',
+                    onPress: () => router.replace('/(tabs)/pill-upload'),
+                },
+            ]);
+        }
+    }, []);
     
     const handleBoxSelect = (index: number) => {
         setSelectedBox(index === selectedBox ? null : index);
@@ -27,39 +58,9 @@ export default function SelectableBoxPage() {
         setModalVisible(true);
     };
     
-    const pills = [
-        {
-            title: 'Ibuprofen',
-            imprint: 'IBU 600',
-            strength: '600 mg',
-            drugClass: 'Nonsteroidal anti-inflammatory drugs',
-            availability: 'Rx and/or OTC',
-            csaSchedule: 'Not a controlled drug',
-            labeler: 'Sandoz Pharmaceuticals Inc.',
-        },
-        {
-            title: 'Aspirin',
-            imprint: 'ASP 500',
-            strength: '500 mg',
-            drugClass: 'Nonsteroidal anti-inflammatory drugs',
-            availability: 'Rx and/or OTC',
-            csaSchedule: 'Not a controlled drug',
-            labeler: 'Bayer Healthcare',
-        },
-        {
-            title: 'Paracetamol',
-            imprint: 'PAR 250',
-            strength: '250 mg',
-            drugClass: 'Analgesics',
-            availability: 'OTC',
-            csaSchedule: 'Not a controlled drug',
-            labeler: 'Acme Pharmaceuticals',
-        },
-    ];
-    
     return (
         <SafeAreaView style={styles.safeArea}>
-        <View style={styles.container}>
+        <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Text style={styles.header}>Select a Medication</Text>
         
@@ -73,10 +74,6 @@ export default function SelectableBoxPage() {
             <Text style={styles.title}>{pill.title}</Text>
             <Text style={styles.boxNumber}>{index + 1}</Text>
             </View>
-            <Text>Imprint: {pill.imprint}</Text>
-            <Text>Strength: {pill.strength}</Text>
-            <Text>Drug Class: {pill.drugClass}</Text>
-            
             <TouchableOpacity
             style={styles.dropdown}
             onPress={() => handleViewMore(index)}
@@ -90,30 +87,43 @@ export default function SelectableBoxPage() {
         <View style={styles.footer}>
         <TouchableOpacity
         style={styles.submitButton}
+        
         onPress={async () => {
             if (selectedBox !== null) {
                 alert(`You selected: ${pills[selectedBox].title}`);
-                // Load history first (optional if already loaded earlier)
                 const selectedPill = pills[selectedBox];
                 await history.load();
                 
-                // Save selected pill to history
-                await history.addPill(
-                    selectedPill.title,
-                    "unknown", // shape — not shown in your UI (can add if you have it)
-                    "unknown", // color — same
-                    selectedPill.strength
+                const all = history.getAll();
+                const alreadyExists = all.some(
+                    (p) =>
+                        p.name === selectedPill.title &&
+                    p.shape === (selectedPill.shape || 'unknown') &&
+                    p.color === (selectedPill.color || 'unknown') &&
+                    p.dosage === selectedPill.strength
                 );
+                
+                if (!alreadyExists) {
+                    await history.addPill(
+                        selectedPill.title,
+                        selectedPill.shape || 'unknown',
+                        selectedPill.color || 'unknown',
+                        selectedPill.strength
+                    );
+                    await history.save();
+                }
+                
+                router.push('/(tabs)/pill-history-page'); // ✅ Navigate after submit
             } else {
                 alert('Please select a box');
             }
         }}
+        
         >
         <Text style={styles.submitText}>Submit</Text>
         </TouchableOpacity>
         </View>
         
-        {/* Modal for dropdown info */}
         <Modal
         visible={modalVisible}
         transparent
@@ -124,12 +134,11 @@ export default function SelectableBoxPage() {
         <View style={styles.modalContent}>
         {modalIndex !== null && (
             <>
-            <Text style={styles.modalTitle}>
-            {pills[modalIndex].title}
-            </Text>
-            <Text>Availability: {pills[modalIndex].availability}</Text>
-            <Text>CSA Schedule: {pills[modalIndex].csaSchedule}</Text>
-            <Text>Labeler/Supplier: {pills[modalIndex].labeler}</Text>
+            <Text style={styles.modalTitle}>{pills[modalIndex].title}</Text>
+            <Text>Imprint: {pills[modalIndex].imprint}</Text>
+            <Text>Color: {pills[modalIndex].color}</Text>
+            <Text>Shape: {pills[modalIndex].shape}</Text>
+            <Text>Strength: {pills[modalIndex].strength}</Text>
             <TouchableOpacity
             onPress={() => setModalVisible(false)}
             style={styles.closeModal}
@@ -141,7 +150,7 @@ export default function SelectableBoxPage() {
         </View>
         </View>
         </Modal>
-        </View>
+        </KeyboardAvoidingView>
         </SafeAreaView>
     );
 }
@@ -157,6 +166,8 @@ const styles = StyleSheet.create({
     },
     scrollContainer: {
         flexGrow: 1,
+        paddingBottom: 80,
+        paddingTop: 16, // added top padding for consistent spacing across screens
     },
     header: {
         fontSize: 24,
@@ -176,16 +187,16 @@ const styles = StyleSheet.create({
         backgroundColor: '#e6f7ff',
     },
     headerContainer: {
-        flexDirection: 'row', // Align the title and badge in a row
+        flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 8,
     },
     title: {
+        paddingTop: 16,
         fontSize: 18,
         fontWeight: 'bold',
         flex: 1,
-        // color: '#00b4d8',
     },
     boxNumber: {
         width: 24,
@@ -209,16 +220,16 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     footer: {
-        paddingTop: 16,
+        paddingVertical: 16,
         alignItems: 'center',
+        backgroundColor: 'white',
     },
     submitButton: {
-        // backgroundColor: '#0077b6',
         backgroundColor: '#00b4d8',
         paddingVertical: 12,
         paddingHorizontal: 32,
         borderRadius: 8,
-        width: '100%',
+        width: '90%',
         alignItems: 'center',
     },
     submitText: {
