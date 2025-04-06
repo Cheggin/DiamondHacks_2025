@@ -3,9 +3,14 @@ from google.genai import types
 import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+from selenium.webdriver.chrome.options import Options
 import os
 import base64
 import json
+from selenium import webdriver
+import time
+import bs4
+import requests
 
 # Set environment variables directly
 PROJECT_ID = '229875499807'
@@ -162,59 +167,6 @@ def query_side_effects(drug_name: str):
         print(f"Error fetching side effects: Status code {response.status_code}")
         return []
 
-# import requests
-
-# def get_rxcui(drug_name):
-#     """
-#     Retrieve the RxCUI for a given drug name using the RxNav API.
-#     """
-#     url = f"https://rxnav.nlm.nih.gov/REST/rxcui.json?name={drug_name}"
-#     response = requests.get(url)
-#     response.raise_for_status()
-#     data = response.json()
-#     # Assuming the first RxCUI is the one we need:
-#     rxcui = data["idGroup"].get("rxnormId", [None])[0]
-#     if rxcui:
-#         print(f"{drug_name} RxCUI: {rxcui}")
-#         return rxcui
-#     else:
-#         raise ValueError(f"No RxCUI found for {drug_name}")
-
-# def get_ddi(rxcui_list):
-#     """
-#     Retrieve drug-drug interactions given a list of RxCUIs.
-#     RxNav expects multiple RxCUIs separated by plus signs.
-#     """
-#     # Create a string with plus signs between RxCUIs
-#     rxcuis = "+".join(rxcui_list)
-#     url = f"https://rxnav.nlm.nih.gov/REST/interaction/list.json?rxcuis={rxcuis}"
-#     response = requests.get(url)
-#     response.raise_for_status()
-#     ddi_data = response.json()
-#     return ddi_data
-
-# def main():
-#     # Define the drug names
-#     drugs = ["ibuprofen", "aspirin"]
-    
-#     # Retrieve RxCUIs for each drug
-#     try:
-#         rxcui_list = [get_rxcui(drug) for drug in drugs]
-#     except Exception as e:
-#         print(f"Error retrieving RxCUI: {e}")
-#         return
-    
-#     # Query the interactions endpoint using the RxCUIs
-#     try:
-#         ddi_results = get_ddi(rxcui_list)
-#         print("Drug-Drug Interaction Results:")
-#         print(ddi_results)
-#     except Exception as e:
-#         print(f"Error retrieving drug-drug interactions: {e}")
-
-# if __name__ == "__main__":
-#     main()
-
 import requests
 from bs4 import BeautifulSoup
 
@@ -264,23 +216,107 @@ def get_drug_internal_id(detail_url):
             return drug_list
     raise ValueError("Could not extract internal drug ID from the detail page.")
 
-if __name__ == "__main__":
-    drug_name = "Tylenol"  # example drug name
-    try:
-        # Step 1: Simulate search for the drug
-        search_html = search_drug(drug_name)
+chrome_options = Options()
+chrome_options.add_argument("--headless")  # Run in headless mode
+chrome_options.add_argument("--disable-gpu")  # Disable GPU acceleration (often recommended)
+
+def get_id(drug_name, sleep_time=1):
+    # Initialize the WebDriver with the headless option
+    driver = webdriver.Chrome(options=chrome_options)
+
+    # Now this will run without opening a window
+    driver.get(f"https://www.drugs.com/interaction/list/?searchterm={drug_name}")
+    previous_url = driver.current_url
+
+    time.sleep(sleep_time)
+    current_url = driver.current_url
+    drug_id = None
+    if current_url != previous_url:
+        print(f'URL changed to: {current_url}')
+        drug_id = current_url.split('?drug_list=')[1]
+        print(f'Drug ID: {drug_id}')
+    else:
+        print("URL did not change. Retrying...")
+        # In a real scenario, you might want to implement a retry mechanism here
+        # For now, we will just exit
+        get_id(drug_name, sleep_time + 1)
         
-        # Step 2: Parse the search results to get the detail page URL
-        detail_page_url = parse_search_results(search_html)
-        print(f"Detail page URL for {drug_name}: {detail_page_url}")
-        
-        # Step 3: On the detail page, parse out the internal ID (drug_list value)
-        internal_id = get_drug_internal_id(detail_page_url)
-        print(f"Internal drug ID for {drug_name}: {internal_id}")
-        
-        # Now you can use this ID to build the interactions checker URL:
-        ddi_url = f"https://www.drugs.com/interactions-check.php?drug_list={internal_id}"
-        print(f"DDI URL for {drug_name}: {ddi_url}")
-        
-    except Exception as e:
-        print(f"Error: {e}")
+    driver.quit()
+
+    return drug_id
+
+def query_ddi(drug_name1, drug_name2):
+    """
+    Queries the interactions-check page for the provided drugs and extracts
+    instances from the "Drug and food interactions" section.
+    
+    Each interaction instance is expected to have:
+      - A header (<h3>) that includes the drug name and the word "food"
+      - A paragraph with "Applies to: ..." text
+      - A subsequent paragraph with the description.
+    """
+    url = f'https://www.drugs.com/interactions-check.php?drug_list={get_id(drug_name1)},{get_id(drug_name2)}'
+    response = requests.get(url)
+    response.raise_for_status()  # Ensure we got a valid response
+
+    soup = bs4.BeautifulSoup(response.text, 'html.parser')
+    # Uncomment the next line to print the entire HTML structure for debugging:
+    # print(soup.prettify())
+
+    results = {}
+
+    # Locate the "Drug and food interactions" section header (assumed to be an <h2>)
+    header = soup.find('h2', string=lambda s: s and 'drug and food interactions' in s.lower())
+    if not header:
+        results["message"] = "No 'Drug and food interactions' section found on the page."
+        return results
+
+    # The interactions should be inside the next sibling div with the class "interactions-reference-wrapper"
+    wrapper = header.find_next_sibling("div", class_="interactions-reference-wrapper")
+    if not wrapper:
+        results["message"] = "No interactions wrapper found."
+        return results
+
+    # Each interaction instance is contained in a div with the class "interactions-reference"
+    instances = wrapper.find_all("div", class_="interactions-reference")
+    if not instances:
+        results["message"] = "No drug-food interaction instances found."
+        return results
+
+    def ordinal(n):
+        if 10 <= n % 100 <= 20:
+            suffix = 'th'
+        else:
+            suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')
+        return str(n) + suffix
+
+    # Process each instance
+    for i, instance in enumerate(instances, start=1):
+        item = {}
+        # The header part of the instance (contains <h3> and the "Applies to:" paragraph)
+        header_div = instance.find("div", class_="interactions-reference-header")
+        if header_div:
+            # Extract the title from the <h3> tag (this will include the drug name and "food")
+            h3_tag = header_div.find("h3")
+            if h3_tag:
+                item["title"] = h3_tag.get_text(" ", strip=True)
+            # Extract the "Applies to:" text
+            applies_to_tag = header_div.find("p")
+            if applies_to_tag:
+                item["applies_to"] = applies_to_tag.get_text(strip=True)
+        # The description is in one or more <p> tags that are outside the header_div
+        description_paragraphs = []
+        for p in instance.find_all("p", recursive=False):
+            # Skip paragraphs that include a link to the professional version
+            if "Switch to professional" in p.get_text():
+                continue
+            # Skip paragraphs that were already included in the header_div
+            if header_div and p in header_div.find_all("p"):
+                continue
+            description_paragraphs.append(p.get_text(strip=True))
+        if description_paragraphs:
+            item["description"] = " ".join(description_paragraphs)
+        results[f"{ordinal(i)} interaction"] = item
+
+    return results
+
