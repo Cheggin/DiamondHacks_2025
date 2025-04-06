@@ -3,7 +3,7 @@ import base64
 from flask_cors import CORS
 from PIL import Image
 from io import BytesIO
-from inference import query_pill_features, query_drugs, query_pill_count
+from inference import query_pill_features, query_drugs, query_pill_count, query_side_effects
 
 app = Flask(__name__)
 CORS(app)
@@ -55,6 +55,20 @@ def analyze():
         print(result["1st choice"])
         return jsonify(result)
         
+
+    except Exception as e:
+        print(f'Error: {e}')
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/side-effects', methods=['GET'])
+def get_side_effects():
+    try:
+        drug_name = request.args.get('drug_name')
+        if not drug_name:
+            return jsonify({'error': 'Drug name is required'}), 400
+
+        side_effects = query_side_effects(drug_name)
+        return jsonify({'side_effects': side_effects})
 
     except Exception as e:
         print(f'Error: {e}')
