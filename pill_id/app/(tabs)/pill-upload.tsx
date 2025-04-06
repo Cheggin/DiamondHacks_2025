@@ -51,15 +51,22 @@ export default function PhotoUploadScreen() {
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#caf0f8', dark: '#1D3D47' }}
-      headerImage={<View />}>
+      headerImage={<View />}
+    >
       <ThemedView style={styles.container}>
         <ThemedText style={styles.centered} type="title">Upload Pill Photos</ThemedText>
 
-        <ThemedButton title="Take front of pill photo" onPress={() => pickImage(setPhoto1, 'photo1')} />
-        {photo1 && <Image source={{ uri: photo1 }} style={styles.imagePreview} />}
+        {/* Box wrapping both button and photo for photo1 */}
+        <View style={styles.uploadBox}>
+          <ThemedButton title="Take front of pill photo" onPress={() => pickImage(setPhoto1, 'photo1')} />
+          {photo1 && <Image source={{ uri: photo1 }} style={styles.imagePreview} />}
+        </View>
 
-        <ThemedButton title="Take back of pill photo" onPress={() => pickImage(setPhoto2, 'photo2')} />
-        {photo2 && <Image source={{ uri: photo2 }} style={styles.imagePreview} />}
+        {/* Box wrapping both button and photo for photo2 */}
+        <View style={styles.uploadBox}>
+          <ThemedButton title="Take back of pill photo" onPress={() => pickImage(setPhoto2, 'photo2')} />
+          {photo2 && <Image source={{ uri: photo2 }} style={styles.imagePreview} />}
+        </View>
       </ThemedView>
     </ParallaxScrollView>
   );
@@ -80,5 +87,16 @@ const styles = StyleSheet.create({
     height: 200,
     resizeMode: 'contain',
     borderRadius: 8,
+    marginTop: 8, // Added margin to create a gap between the button and the photo
+  },
+  uploadBox: {
+    padding: 16,
+    marginVertical: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 12,
+    backgroundColor: '#f9f9f9',
+    alignItems: 'center',  // Center content inside the box
+    justifyContent: 'center',
   },
 });
