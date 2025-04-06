@@ -163,12 +163,15 @@
 
 import { useEffect, useState } from 'react';
 import { View, Image, Text, ScrollView, StyleSheet, Platform } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
 import * as Progress from 'react-native-progress';
+import { PillResultStore } from '../(tabs)/pill-result-store';
+
 
 export default function PillResultScreen() {
   const { photo1, photo2 } = useLocalSearchParams();
+  const router = useRouter();
   const [result, setResult] = useState('');
   const [progress, setProgress] = useState(0);
 
@@ -200,6 +203,22 @@ export default function PillResultScreen() {
         encoding: FileSystem.EncodingType.Base64,
       });
     }
+  };
+
+  const extractPill = (text: string | null): any | null => {
+    if (!text || text === 'N/A') return null;
+    const name = text.split('Strength')[0].trim();
+    const strength = text.match(/Strength (.*?) Imprint/)?.[1]?.trim() || 'N/A';
+    const imprint = text.match(/Imprint (.*?) Color/)?.[1]?.trim() || 'N/A';
+    const color = text.match(/Color (.*?) Shape/)?.[1]?.trim() || 'N/A';
+    const shape = text.match(/Shape (.*?) View details/)?.[1]?.trim() || 'N/A';
+    return { title: name, strength, imprint, color, shape };
+  };
+
+  const extractAllChoices = (data: any) => {
+    return ['1st choice', '2nd choice', '3rd choice']
+      .map((key) => extractPill(data[key]))
+      .filter((pill) => pill !== null);
   };
 
   const sendBothPhotos = async (photo1Uri: string, photo2Uri: string) => {
@@ -265,6 +284,11 @@ export default function PillResultScreen() {
       clearInterval(progressInterval);
       setProgress(1);
       setResult(JSON.stringify(data, null, 2));
+
+      const structured = extractAllChoices(data);
+      PillResultStore.set(structured);
+      router.push('/test');
+
     } catch (err) {
       console.error('Error analyzing combined image:', err);
       setResult('Error analyzing combined image.');
@@ -311,6 +335,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
+    paddingTop: 30,
   },
   image: {
     width: 300,
