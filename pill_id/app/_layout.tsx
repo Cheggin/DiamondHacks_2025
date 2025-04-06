@@ -8,6 +8,7 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { AppStateProvider } from './(tabs)/app-state'; 
+import { Auth0ProviderWrapper } from '@/components/Auth0ProviderWrapper'; // ✅ import
 
 SplashScreen.preventAutoHideAsync();
 
@@ -28,14 +29,16 @@ export default function RootLayout() {
   }
 
   return (
-    <AppStateProvider> 
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    </AppStateProvider>
+    <Auth0ProviderWrapper> 
+      <AppStateProvider> 
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="+not-found" />
+          </Stack>
+          <StatusBar style="auto" />
+        </ThemeProvider>
+      </AppStateProvider>
+    </Auth0ProviderWrapper>
   );
 }
