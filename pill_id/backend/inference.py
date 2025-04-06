@@ -13,7 +13,7 @@ PROJECT_ID = '229875499807'
 REGION = 'us-central1'
 ENDPOINT_ID = '3163467576437112832'
 
-def inference(image_bytes):
+def query_pill_features(image_bytes):
     client = genai.Client(
         vertexai=True,
         project="229875499807",
@@ -71,6 +71,9 @@ def inference(image_bytes):
     color = features[1]
     shape = features[2]
 
+    return imprint, color, shape
+
+def query_drugs(imprint: str, color: str, shape: str):
     url = f"https://www.drugs.com/imprints.php?imprint={imprint}&color={color}&shape={shape}"
 
     response = requests.get(url)
@@ -97,9 +100,33 @@ def inference(image_bytes):
     else:
         print(f"Error fetching page: Status code {response.status_code}")
 
+def query_pill_count(imprint: str, color: str, shape: str):
+    # Load environment variables for API key
+    load_dotenv()
+    
+    # Initialize client for Flash 2.0 (not Vertex AI)
+    client = genai.Client(
+        api_key=os.getenv("GENAI-APIKEY")
+    )
+    
+    # Use Gemini Flash 2.0 model
+    model = client.get_model("models/gemini-flash-2")
+    
+    # Create a simple hello world prompt
+    prompt = "Hello world! Please give a brief response."
+    
+    # Generate content
+    response = model.generate_content(prompt)
+    
+    # Print the response
+    print("Flash 2.0 Model Response:")
+    print(response.text)
+    
+    return imprint, color, shape
+
 
 # Load image and run inference
 with open("pill_id/backend/pill.jpeg", "rb") as file:
     local_image_bytes = file.read()
 
-inference(local_image_bytes)
+query_drugs(*query_pill_features(local_image_bytes))
