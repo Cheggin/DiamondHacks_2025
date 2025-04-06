@@ -19,8 +19,8 @@ export default function HomeScreen() {
           style={styles.logo}
         />
         
-        <ThemedText type="title">Welcome to PillSnap</ThemedText>
-        <ThemedText type="subtitle">
+        <ThemedText type="subtitle">Welcome to PillSnap !</ThemedText>
+        <ThemedText type="default" greyText={true}>
           Identify and track your medications with just a photo.
         </ThemedText>
 
