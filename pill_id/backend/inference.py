@@ -1,69 +1,79 @@
 from google import genai
-from google.genai.types import HttpOptions, Part
+from google.genai import types
+from google.cloud import aiplatform
 import requests
 from bs4 import BeautifulSoup
-import time
-
 from dotenv import load_dotenv
 import os
+import base64
+import json
 
+# Set environment variables directly
+PROJECT_ID = '229875499807'
+REGION = 'us-central1'
+ENDPOINT_ID = '3163467576437112832'
 
-load_dotenv()
-genai_apikey = os.getenv('GENAI-APIKEY')
-if not genai_apikey:
-    print("Error: GENAI-APIKEY environment variable is not set.")
-    exit(1)
-
-client = genai.Client(api_key=genai_apikey)
-
-def inference(image_bytes):
-
-    """
-    EXAMPLE FROM LOCAL IMAGE
-    """
-    # with open("pill_id backend/pill.jpeg", "rb") as file:
-    #     local_image_bytes = file.read()
-
-    # response = client.models.generate_content(
-    #     model="gemini-2.0-flash",
-    #     contents=["I should have given you an image of a pill. Only respond with the imprint of the pill, the shape of the pill, and the color of the pill and only those three pieces of information, each on a new line, without any additional text or explanations.",
-    #             Part.from_bytes(data=local_image_bytes, mime_type="image/png"),
-    #             ]
-    # )
-
-    """
-    GET RESPONSE FROM GIVEN IMAGE BYTES
-    """
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=["I should have given you an image of a pill. Only respond with the imprint of the pill, the shape of the pill, and the color of the pill and only those three pieces of information, each on a new line, without any additional text or explanations.",
-                Part.from_bytes(data=image_bytes, mime_type="image/png"),
-                ]
+def query_pill_features(image_bytes):
+    client = genai.Client(
+        vertexai=True,
+        project="229875499807",
+        location="us-central1",
     )
-    try:
-        parts = response.candidates[0].content.parts
-        if not parts:
-            print("No content parts found in response.")
-            return
 
-        text = parts[0].text
-        if not text:
-            print("Text content is empty.")
-            return
+    msg1_image1 = types.Part.from_bytes(
+        data=image_bytes,
+        mime_type="image/jpeg",
+    )
 
-        features = text.strip().split("\n")
-        if len(features) < 3:
-            print("Not enough features extracted from Gemini response.")
-            return
+    model = "projects/229875499807/locations/us-central1/endpoints/3163467576437112832"
+    contents = [
+        types.Content(
+            role="user",
+            parts=[
+                msg1_image1,
+                types.Part.from_text(text="""Get the color, shape, and imprint of this pill.""")
+            ]
+        ),
+    ]
+    generate_content_config = types.GenerateContentConfig(
+        temperature=0.2,
+        top_p=0.8,
+        max_output_tokens=1024,
+        response_modalities=["TEXT"],
+        safety_settings=[
+            types.SafetySetting(
+                category="HARM_CATEGORY_HATE_SPEECH",
+                threshold="OFF"
+            ),
+            types.SafetySetting(
+                category="HARM_CATEGORY_DANGEROUS_CONTENT",
+                threshold="OFF"
+            ),
+            types.SafetySetting(
+                category="HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                threshold="OFF"
+            ),
+            types.SafetySetting(
+                category="HARM_CATEGORY_HARASSMENT",
+                threshold="OFF"
+            )
+        ],
+    )
 
-        imprint = features[0].strip().replace(" ", "+")
-        color = features[1].strip().lower()
-        shape = features[2].strip().lower()
-    except Exception as e:
-        print("Error parsing Gemini response:", e)
-        return
+    response = client.models.generate_content(
+        model=model,
+        contents=contents,
+        config=generate_content_config,
+    )
 
+    features = response.text.split(",")
+    imprint = features[0]
+    color = features[1]
+    shape = features[2]
 
+    return imprint, color, shape
+
+def query_drugs(imprint: str, color: str, shape: str):
     url = f"https://www.drugs.com/imprints.php?imprint={imprint}&color={color}&shape={shape}"
 
     response = requests.get(url)
@@ -110,8 +120,33 @@ def inference(image_bytes):
         
     
 
+def query_pill_count(image_bytes, imprint: str, color: str, shape: str):
+    # Load environment variables for API key
+    load_dotenv()
     
-# with open("backend/pill.jpeg", "rb") as file:
-#     local_image_bytes = file.read()
+    # Initialize client for Flash 2.0 (not Vertex AI)
+    client = genai.Client(
+        api_key=os.getenv("GENAI-APIKEY")
+    )
 
-# inference(local_image_bytes)  # Replace None with actual image bytes when calling the function
+    image = types.Part.from_bytes(
+        data=image_bytes,
+        mime_type="image/jpeg",
+    )
+    
+    response = client.models.generate_content(
+        model="gemini-2.0-flash", 
+        contents=["Please count the number of pills with these characteristics: imprint: {}, color: {}, shape: {}. Return nothing but the number.".format(imprint, color, shape),
+                  image]
+    )   
+
+    print(response.text)
+    
+    return response.text
+
+
+# Load image and run inference
+with open("pill_id/backend/pill.jpeg", "rb") as file:
+    local_image_bytes = file.read()
+
+query_pill_count(local_image_bytes, *query_pill_features(local_image_bytes))
