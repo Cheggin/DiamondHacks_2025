@@ -100,7 +100,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="login"
+        name="Login"
         options={{
           href: null, // Hide from tabs (though we're not using this one anymore)
         }}
