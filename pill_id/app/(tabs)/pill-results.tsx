@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { View, Image, Text, ScrollView, StyleSheet, Platform } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
-import * as Progress from 'react-native-progress';  // Import Progress bar
+import * as Progress from 'react-native-progress';
 
 export default function PillResultScreen() {
   const { photo1, photo2 } = useLocalSearchParams();
   const [result, setResult] = useState('');
-  const [progress, setProgress] = useState(0); // For progress tracking
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     if (photo1 && photo2) {
@@ -15,7 +15,6 @@ export default function PillResultScreen() {
     }
   }, [photo1, photo2]);
 
-  // Convert image URI to base64 on web
   const uriToBase64Web = async (uri: string): Promise<string> => {
     const response = await fetch(uri);
     const blob = await response.blob();
@@ -30,7 +29,6 @@ export default function PillResultScreen() {
     });
   };
 
-  // Get base64 for both platforms
   const getBase64 = async (uri: string): Promise<string> => {
     if (Platform.OS === 'web') {
       return await uriToBase64Web(uri);
@@ -46,18 +44,30 @@ export default function PillResultScreen() {
       const base64_1 = await getBase64(photo1Uri);
       const base64_2 = await getBase64(photo2Uri);
 
-      const response = await fetch('http://100.81.22.146:5001/analyze-both', {
+      let progressInterval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 1) {
+            clearInterval(progressInterval);
+            return 1;
+          }
+          return prev + 0.1;
+        });
+      }, 500);
+
+      const response = await fetch('http://100.80.6.211:5001/analyze-both', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image1: base64_1, image2: base64_2 }),
       });
 
       const data = await response.json();
-      setResult(JSON.stringify(data, null, 2)); // pretty print
+      clearInterval(progressInterval);
+      setProgress(1);
+      setResult(JSON.stringify(data, null, 2));
     } catch (err) {
       console.error('Error sending to Gemini:', err);
       setResult('Error analyzing combined image.');
-      setProgress(0); // Reset progress on error
+      setProgress(0);
     }
   };
 
@@ -65,11 +75,27 @@ export default function PillResultScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Gemini Pill Results</Text>
 
-      {photo1 && (
-        <Image source={{ uri: photo1 as string }} style={styles.image} />
+      {photo1 && <Image source={{ uri: photo1 as string }} style={styles.image} />}
+      {photo2 && <Image source={{ uri: photo2 as string }} style={styles.image} />}
+
+      {!result && (
+        <>
+          <Text style={{ marginTop: 16 }}>Analyzing photos...</Text>
+          <Progress.Bar 
+            progress={progress} 
+            width={300} 
+            height={10} 
+            color="#3498db" 
+            borderWidth={0} 
+            unfilledColor="#ecf0f1"
+            borderRadius={5} 
+            style={{ marginTop: 10 }}
+          />
+        </>
       )}
-      {photo2 && (
-        <Image source={{ uri: photo2 as string }} style={styles.image} />
+
+      {result && (
+        <Text style={styles.resultText}>{result}</Text>
       )}
 
       <Text style={styles.resultText}>
