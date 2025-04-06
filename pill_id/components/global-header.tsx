@@ -12,7 +12,7 @@ export default function GlobalHeader() {
         {/* Left: PillSnap Logo and Title */}
         <View style={styles.leftContainer}>
           <Image
-            source={require('@/assets/images/PillSnapLogo.png')}
+            source={require('@/assets/images/PillSnapIcon.png')}
             style={styles.pillIcon}
           />
           <Text style={styles.title}>PillSnap</Text>
