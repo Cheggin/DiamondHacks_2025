@@ -141,10 +141,3 @@ def query_pill_count(image_bytes, imprint: str, color: str, shape: str):
     print(response.text)
     
     return response.text
-
-
-# # Load image and run inference
-# with open("pill_id/backend/pill.jpeg", "rb") as file:
-#     local_image_bytes = file.read()
-
-# query_pill_count(local_image_bytes, *query_pill_features(local_image_bytes))
