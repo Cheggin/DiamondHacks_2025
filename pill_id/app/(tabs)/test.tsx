@@ -14,6 +14,8 @@ import {
 } from 'react-native';
 import { PillResultStore } from '../(tabs)/pill-result-store';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native'; 
+import { useCallback } from 'react'; 
 
 export default function SelectableBoxPage() {
     const history = new PillHistory();
@@ -38,16 +40,18 @@ export default function SelectableBoxPage() {
         );
     });
     
-    useEffect(() => {
-        if (pills.length === 0) {
-            Alert.alert('No drugs were found!', 'Please try again.', [
-                {
-                    text: 'OK',
-                    onPress: () => router.replace('/(tabs)/pill-upload'),
-                },
-            ]);
-        }
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            if (pills.length === 0) {
+                Alert.alert('No drugs were found!', 'Please try again.', [
+                    {
+                        text: 'OK',
+                        onPress: () => router.replace('/(tabs)/pill-upload'),
+                    },
+                ]);
+            }
+        }, [pills])
+    );
     
     const handleBoxSelect = (index: number) => {
         setSelectedBox(index === selectedBox ? null : index);

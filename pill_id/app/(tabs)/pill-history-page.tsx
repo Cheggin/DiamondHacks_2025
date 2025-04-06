@@ -63,7 +63,7 @@ export default function PillHistoryTable() {
 
       <Table borderStyle={{ borderWidth: 1, borderColor: "#ccc" }}>
         <Row data={tableHead} style={styles.head} textStyle={styles.headText} />
-        <Rows data={tableData} />
+        <Rows data={tableData} textStyle={styles.text} />
       </Table>
 
       <TouchableOpacity style={styles.resetButton} onPress={handleResetHistory}>
@@ -86,6 +86,7 @@ const styles = StyleSheet.create({
   },
   head: { height: 40, backgroundColor: "#f1f8ff" },
   headText: { margin: 6, fontWeight: "bold" },
+  text: { margin: 6 }, // ✅ Added this to fix the warning
   resetButton: {
     marginTop: 20,
     backgroundColor: "#e74c3c",
