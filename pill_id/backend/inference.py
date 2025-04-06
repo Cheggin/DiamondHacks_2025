@@ -1,6 +1,5 @@
 from google import genai
 from google.genai import types
-from google.cloud import aiplatform
 import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
@@ -22,7 +21,7 @@ def query_pill_features(image_bytes):
 
     msg1_image1 = types.Part.from_bytes(
         data=image_bytes,
-        mime_type="image/jpeg",
+        mime_type="image/png",
     )
 
     model = "projects/229875499807/locations/us-central1/endpoints/3163467576437112832"
@@ -118,7 +117,6 @@ def query_drugs(imprint: str, color: str, shape: str):
         "3rd choice": output[2] if len(output) > 2 else "N/A",
     }
         
-    
 
 def query_pill_count(image_bytes, imprint: str, color: str, shape: str):
     # Load environment variables for API key
@@ -131,7 +129,7 @@ def query_pill_count(image_bytes, imprint: str, color: str, shape: str):
 
     image = types.Part.from_bytes(
         data=image_bytes,
-        mime_type="image/jpeg",
+        mime_type="image/png",
     )
     
     response = client.models.generate_content(
@@ -145,8 +143,8 @@ def query_pill_count(image_bytes, imprint: str, color: str, shape: str):
     return response.text
 
 
-# Load image and run inference
-with open("pill_id/backend/pill.jpeg", "rb") as file:
-    local_image_bytes = file.read()
+# # Load image and run inference
+# with open("pill_id/backend/pill.jpeg", "rb") as file:
+#     local_image_bytes = file.read()
 
-query_pill_count(local_image_bytes, *query_pill_features(local_image_bytes))
+# query_pill_count(local_image_bytes, *query_pill_features(local_image_bytes))

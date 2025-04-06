@@ -40,8 +40,9 @@ def analyze():
         combined_image_bytes = BytesIO()
         new_image.save(combined_image_bytes, format='PNG')
         combined_image_bytes.seek(0)  # Reset the BytesIO object to the beginning
-        combined_image_bytes = combined_image_bytes.read()  # Read the bytes for inference
         
+        combined_image_bytes = combined_image_bytes.read()  # Read the bytes for inference
+
         result = query_drugs(*query_pill_features(combined_image_bytes))
         
         # print the variable names of result
