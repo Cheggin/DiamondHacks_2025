@@ -4,12 +4,7 @@ from flask_cors import CORS
 from PIL import Image
 from io import BytesIO
 from inference import (
-    query_pill_features, query_drugs, query_pill_count, query_side_effects,
-    query_ddi, get_all_info,
-    get_ask_doctor, get_ask_doctor_or_pharmacist, get_stop_use,
-    get_pregnancy_or_breast_feeding, get_keep_out_of_reach_of_children,
-    get_dosage_and_administration, get_dosage_and_administration_table,
-    get_storage_and_handling, get_purpose, get_indications_and_usage
+    query_pill_features, query_drugs, query_side_effects, query_ddi
 )
 
 app = Flask(__name__)
@@ -74,109 +69,109 @@ def get_ddi():
         print(f'Error: {e}')
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/get_all_info', methods=['GET'])
-def get_all_info_api():
-    try:
-        drug_name = request.args.get('drug_name')
-        print(drug_name)
-        limit = request.args.get('limit', default=1, type=int)
-        if not drug_name:
-            return jsonify({'error': 'Drug name is required'}), 400
-        all_info = get_all_info(drug_name, limit)
-        return jsonify({'all_info': all_info})
-    except Exception as e:
-        print(f'Error: {e}')
-        return jsonify({'error': 'Internal server error'}), 500
+# @app.route('/get_all_info', methods=['GET'])
+# def get_all_info_api():
+#     try:
+#         drug_name = request.args.get('drug_name')
+#         print(drug_name)
+#         limit = request.args.get('limit', default=1, type=int)
+#         if not drug_name:
+#             return jsonify({'error': 'Drug name is required'}), 400
+#         all_info = get_all_info(drug_name, limit)
+#         return jsonify({'all_info': all_info})
+#     except Exception as e:
+#         print(f'Error: {e}')
+#         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/get_ask_doctor', methods=['GET'])
-def get_ask_doctor_api():
-    drug_name = request.args.get('drug_name')
-    limit = request.args.get('limit', default=1, type=int)
-    if not drug_name:
-        return jsonify({'error': 'Drug name is required'}), 400
-    data = get_ask_doctor(drug_name, limit)
-    return jsonify({'ask_doctor': data})
+# @app.route('/get_ask_doctor', methods=['GET'])
+# def get_ask_doctor_api():
+#     drug_name = request.args.get('drug_name')
+#     limit = request.args.get('limit', default=1, type=int)
+#     if not drug_name:
+#         return jsonify({'error': 'Drug name is required'}), 400
+#     data = get_ask_doctor(drug_name, limit)
+#     return jsonify({'ask_doctor': data})
 
-@app.route('/get_ask_doctor_or_pharmacist', methods=['GET'])
-def get_ask_doctor_or_pharmacist_api():
-    drug_name = request.args.get('drug_name')
-    limit = request.args.get('limit', default=1, type=int)
-    if not drug_name:
-        return jsonify({'error': 'Drug name is required'}), 400
-    data = get_ask_doctor_or_pharmacist(drug_name, limit)
-    return jsonify({'ask_doctor_or_pharmacist': data})
+# @app.route('/get_ask_doctor_or_pharmacist', methods=['GET'])
+# def get_ask_doctor_or_pharmacist_api():
+#     drug_name = request.args.get('drug_name')
+#     limit = request.args.get('limit', default=1, type=int)
+#     if not drug_name:
+#         return jsonify({'error': 'Drug name is required'}), 400
+#     data = get_ask_doctor_or_pharmacist(drug_name, limit)
+#     return jsonify({'ask_doctor_or_pharmacist': data})
 
-@app.route('/get_stop_use', methods=['GET'])
-def get_stop_use_api():
-    drug_name = request.args.get('drug_name')
-    limit = request.args.get('limit', default=1, type=int)
-    if not drug_name:
-        return jsonify({'error': 'Drug name is required'}), 400
-    data = get_stop_use(drug_name, limit)
-    return jsonify({'stop_use': data})
+# @app.route('/get_stop_use', methods=['GET'])
+# def get_stop_use_api():
+#     drug_name = request.args.get('drug_name')
+#     limit = request.args.get('limit', default=1, type=int)
+#     if not drug_name:
+#         return jsonify({'error': 'Drug name is required'}), 400
+#     data = get_stop_use(drug_name, limit)
+#     return jsonify({'stop_use': data})
 
-@app.route('/get_pregnancy_or_breast_feeding', methods=['GET'])
-def get_pregnancy_or_breast_feeding_api():
-    drug_name = request.args.get('drug_name')
-    limit = request.args.get('limit', default=1, type=int)
-    if not drug_name:
-        return jsonify({'error': 'Drug name is required'}), 400
-    data = get_pregnancy_or_breast_feeding(drug_name, limit)
-    return jsonify({'pregnancy_or_breast_feeding': data})
+# @app.route('/get_pregnancy_or_breast_feeding', methods=['GET'])
+# def get_pregnancy_or_breast_feeding_api():
+#     drug_name = request.args.get('drug_name')
+#     limit = request.args.get('limit', default=1, type=int)
+#     if not drug_name:
+#         return jsonify({'error': 'Drug name is required'}), 400
+#     data = get_pregnancy_or_breast_feeding(drug_name, limit)
+#     return jsonify({'pregnancy_or_breast_feeding': data})
 
-@app.route('/get_keep_out_of_reach_of_children', methods=['GET'])
-def get_keep_out_of_reach_of_children_api():
-    drug_name = request.args.get('drug_name')
-    limit = request.args.get('limit', default=1, type=int)
-    if not drug_name:
-        return jsonify({'error': 'Drug name is required'}), 400
-    data = get_keep_out_of_reach_of_children(drug_name, limit)
-    return jsonify({'keep_out_of_reach_of_children': data})
+# @app.route('/get_keep_out_of_reach_of_children', methods=['GET'])
+# def get_keep_out_of_reach_of_children_api():
+#     drug_name = request.args.get('drug_name')
+#     limit = request.args.get('limit', default=1, type=int)
+#     if not drug_name:
+#         return jsonify({'error': 'Drug name is required'}), 400
+#     data = get_keep_out_of_reach_of_children(drug_name, limit)
+#     return jsonify({'keep_out_of_reach_of_children': data})
 
-@app.route('/get_dosage_and_administration', methods=['GET'])
-def get_dosage_and_administration_api():
-    drug_name = request.args.get('drug_name')
-    limit = request.args.get('limit', default=1, type=int)
-    if not drug_name:
-        return jsonify({'error': 'Drug name is required'}), 400
-    data = get_dosage_and_administration(drug_name, limit)
-    return jsonify({'dosage_and_administration': data})
+# @app.route('/get_dosage_and_administration', methods=['GET'])
+# def get_dosage_and_administration_api():
+#     drug_name = request.args.get('drug_name')
+#     limit = request.args.get('limit', default=1, type=int)
+#     if not drug_name:
+#         return jsonify({'error': 'Drug name is required'}), 400
+#     data = get_dosage_and_administration(drug_name, limit)
+#     return jsonify({'dosage_and_administration': data})
 
-@app.route('/get_dosage_and_administration_table', methods=['GET'])
-def get_dosage_and_administration_table_api():
-    drug_name = request.args.get('drug_name')
-    limit = request.args.get('limit', default=1, type=int)
-    if not drug_name:
-        return jsonify({'error': 'Drug name is required'}), 400
-    data = get_dosage_and_administration_table(drug_name, limit)
-    return jsonify({'dosage_and_administration_table': data})
+# @app.route('/get_dosage_and_administration_table', methods=['GET'])
+# def get_dosage_and_administration_table_api():
+#     drug_name = request.args.get('drug_name')
+#     limit = request.args.get('limit', default=1, type=int)
+#     if not drug_name:
+#         return jsonify({'error': 'Drug name is required'}), 400
+#     data = get_dosage_and_administration_table(drug_name, limit)
+#     return jsonify({'dosage_and_administration_table': data})
 
-@app.route('/get_storage_and_handling', methods=['GET'])
-def get_storage_and_handling_api():
-    drug_name = request.args.get('drug_name')
-    limit = request.args.get('limit', default=1, type=int)
-    if not drug_name:
-        return jsonify({'error': 'Drug name is required'}), 400
-    data = get_storage_and_handling(drug_name, limit)
-    return jsonify({'storage_and_handling': data})
+# @app.route('/get_storage_and_handling', methods=['GET'])
+# def get_storage_and_handling_api():
+#     drug_name = request.args.get('drug_name')
+#     limit = request.args.get('limit', default=1, type=int)
+#     if not drug_name:
+#         return jsonify({'error': 'Drug name is required'}), 400
+#     data = get_storage_and_handling(drug_name, limit)
+#     return jsonify({'storage_and_handling': data})
 
-@app.route('/get_purpose', methods=['GET'])
-def get_purpose_api():
-    drug_name = request.args.get('drug_name')
-    limit = request.args.get('limit', default=1, type=int)
-    if not drug_name:
-        return jsonify({'error': 'Drug name is required'}), 400
-    data = get_purpose(drug_name, limit)
-    return jsonify({'purpose': data})
+# @app.route('/get_purpose', methods=['GET'])
+# def get_purpose_api():
+#     drug_name = request.args.get('drug_name')
+#     limit = request.args.get('limit', default=1, type=int)
+#     if not drug_name:
+#         return jsonify({'error': 'Drug name is required'}), 400
+#     data = get_purpose(drug_name, limit)
+#     return jsonify({'purpose': data})
 
-@app.route('/get_indications_and_usage', methods=['GET'])
-def get_indications_and_usage_api():
-    drug_name = request.args.get('drug_name')
-    limit = request.args.get('limit', default=1, type=int)
-    if not drug_name:
-        return jsonify({'error': 'Drug name is required'}), 400
-    data = get_indications_and_usage(drug_name, limit)
-    return jsonify({'indications_and_usage': data})
+# @app.route('/get_indications_and_usage', methods=['GET'])
+# def get_indications_and_usage_api():
+#     drug_name = request.args.get('drug_name')
+#     limit = request.args.get('limit', default=1, type=int)
+#     if not drug_name:
+#         return jsonify({'error': 'Drug name is required'}), 400
+#     data = get_indications_and_usage(drug_name, limit)
+#     return jsonify({'indications_and_usage': data})
 
 @app.route('/test', methods=['GET'])
 def test():

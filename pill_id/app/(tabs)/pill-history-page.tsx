@@ -194,10 +194,10 @@ export default function PillHistoryTable() {
             {interactionResults.map((interaction, idx) => (
               <View key={idx} style={styles.interactionCard}>
                 <Text style={styles.interactionHeader}>
-                  {(interaction?.title ?? "Unknown interaction").split(" ").join(" and ")}
+                  {(interaction?.title ?? "Unknown").split(" ").join(" and ")}
                 </Text>
                 <Text style={styles.interactionSub}>{interaction?.applies_to ?? "N/A"}</Text>
-                <Text style={styles.interactionText}>{interaction?.description ?? "No description provided."}</Text>
+                <Text style={styles.interactionText}>{interaction?.description ?? "Please try again."}</Text>
               </View>
             ))}
           </View>
