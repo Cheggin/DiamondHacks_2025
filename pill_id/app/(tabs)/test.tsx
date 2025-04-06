@@ -117,7 +117,7 @@ export default function SelectableBoxPage() {
                     await history.save();
                 }
                 
-                router.push('/(tabs)/pill-history-page'); // ✅ Navigate after submit
+                router.push('/(tabs)/pill-history-page'); 
             } else {
                 alert('Please select a box');
             }
@@ -232,6 +232,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#00b4d8',
         paddingVertical: 12,
         paddingHorizontal: 32,
+        marginBottom: 80,
         borderRadius: 8,
         width: '90%',
         alignItems: 'center',
