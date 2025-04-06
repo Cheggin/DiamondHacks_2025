@@ -62,8 +62,8 @@ export default function PillHistoryTable() {
       />
 
       <Table borderStyle={{ borderWidth: 1, borderColor: "#ccc" }}>
-        <Row data={tableHead} style={styles.head} textStyle={styles.headText} />
-        <Rows data={tableData} textStyle={styles.text} />
+        <Row data={tableHead} style={styles.head} textStyle={{ margin: 6, fontWeight: 'bold' }} />
+        <Rows data={tableData} textStyle={{ margin: 6 }} />
       </Table>
 
       <TouchableOpacity style={styles.resetButton} onPress={handleResetHistory}>
@@ -75,7 +75,7 @@ export default function PillHistoryTable() {
 
 const styles = StyleSheet.create({
   container: { padding: 16, backgroundColor: "#fff", flex: 1 },
-  title: { fontSize: 24, fontWeight: "600", marginBottom: 16, paddingTop: 30 },
+  title: { fontSize: 24, fontWeight: "600", marginBottom: 16, marginTop: 45 },
   search: {
     height: 40,
     borderColor: "#ccc",
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   },
   head: { height: 40, backgroundColor: "#f1f8ff" },
   headText: { margin: 6, fontWeight: "bold" },
-  text: { margin: 6 }, // ✅ Added this to fix the warning
+  text: { margin: 6 }, 
   resetButton: {
     marginTop: 20,
     backgroundColor: "#e74c3c",
