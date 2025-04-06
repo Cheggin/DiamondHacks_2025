@@ -54,6 +54,12 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="flask.fill" color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="pill-history"
+        options={{
+          title: 'Pill History',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="clock.fill" color={color} />,
+        }}/>
     </Tabs>
   );
 }
