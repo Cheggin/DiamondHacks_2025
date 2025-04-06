@@ -40,7 +40,6 @@ export default function PhotoUploadScreen() {
     }, [])
   );
 
-  // ⬇️ Add this right after
   useEffect(() => {
     if (isNavigating) {
       const timer = setTimeout(() => {
@@ -72,22 +71,6 @@ export default function PhotoUploadScreen() {
       const nextPhoto1 = imageType === 'photo1' ? uri : photo1;
       const nextPhoto2 = imageType === 'photo2' ? uri : photo2;
 
-      // if (nextPhoto1 && nextPhoto2) {
-      //   setIsNavigating(true);
-      //   InteractionManager.runAfterInteractions(() => {
-      //     setTimeout(() => {
-      //       // router.replace({
-      //       //   pathname: '/pill-results',
-      //       //   params: { photo1: nextPhoto1, photo2: nextPhoto2 },
-      //       // });
-      //       router.push({
-      //         pathname: '/pill-results',
-      //         params: { photo1: nextPhoto1, photo2: nextPhoto2 },
-      //       });
-      //     }, 1500);
-      //   });
-      // }
-
       if (nextPhoto1 && nextPhoto2) {
         setIsNavigating(true);
         router.push({
@@ -95,7 +78,6 @@ export default function PhotoUploadScreen() {
           params: { photo1: nextPhoto1, photo2: nextPhoto2 },
         });
       }
-      
     }
   };
 
@@ -119,7 +101,7 @@ export default function PhotoUploadScreen() {
       <ScrollView
         contentContainerStyle={[
           styles.scrollContainer,
-          { paddingTop: insets.top + 16 },
+          { paddingTop: insets.top + 72 }, // 24
         ]}
       >
         <ThemedView style={styles.container}>
