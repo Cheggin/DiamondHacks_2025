@@ -3,7 +3,7 @@ import base64
 from flask_cors import CORS
 from PIL import Image
 from io import BytesIO
-from inference import inference
+from inference import query_pill_features, query_drugs, query_pill_count
 
 app = Flask(__name__)
 CORS(app)
@@ -40,10 +40,10 @@ def analyze():
         combined_image_bytes = BytesIO()
         new_image.save(combined_image_bytes, format='PNG')
         combined_image_bytes.seek(0)  # Reset the BytesIO object to the beginning
+        
         combined_image_bytes = combined_image_bytes.read()  # Read the bytes for inference
 
-        # Pass the actual image bytes to inference
-        result = inference(combined_image_bytes)
+        result = query_drugs(*query_pill_features(combined_image_bytes))
         
         # print the variable names of result
         # print(result.__dict__.keys())
